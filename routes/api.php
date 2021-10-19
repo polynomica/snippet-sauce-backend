@@ -20,3 +20,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::get('/display', [CodeController::class, 'display']);
+Route::get('/filter', [CodeController::class, 'filter']);
+Route::get('/author_details', [CodeController::class, 'author_details']);
+Route::get('/author_login', [CodeController::class, 'author_login']);
