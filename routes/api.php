@@ -20,9 +20,15 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+//Snippet CRUD Operations
+Route::post('/create_snippet', [CodeController::class, 'create_snippet']);
+// Route::get('/update_snippet', [CodeController::class, 'update_snippet']);
+// Route::get('/insert_snippet', [CodeController::class, 'insert_snippet']);
+Route::get('/delete_snippet/{language}/{snippet_id}', [CodeController::class, 'delete_snippet']);
+
 //Snippet related APIs
 Route::get('/display', [CodeController::class, 'display']);
-Route::get('/filter', [CodeController::class, 'filter']);
+// Route::get('/filter', [CodeController::class, 'filter']);
 
 //User related APIs
 Route::get('/author_details', [UserController::class, 'author_details']);
