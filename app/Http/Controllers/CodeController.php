@@ -6,6 +6,7 @@ use DateTime;
 use Exception;
 use App\Models\Code;
 use App\Models\Lang;
+use App\Models\News;
 use Illuminate\Http\Request;
 // use Illuminate\Support\Facades\Auth;
 // use Illuminate\Support\Facades\Http;
@@ -15,76 +16,73 @@ class CodeController extends Controller
 {
     public function display()
     {
-        $data = [
-            'Languages' => 'Hello',
-            'Snippets' => [
-                ['id' => '1'],
-                ['id' => '2']
-            ],
-        ];
-        // Code::where('Languages', 'Hello World')->push('Snippets', [$data]);
-        // Code::where('Languages', 'Hello')->push('Snippets', [
-        //     ['id' => '3'],
-        //     ['id' => '4']
-        // ]);
-        // Code::create($data);
-        // $data = Lang::all();
-        // return $data[0]->Languages;
-        return response()->json($data);
+        $data = News::all();
+        $data = $data[0]->latest;
+        $data = array_reverse($data);
+        $recent_snippets = [];
+        foreach ($data as $value) {
+            $language = substr($value, 0, 2);
+            $snippet_id = substr($value, 2);
+            $snippets = Code::where('Language', $language)->where('Snippets', [$data]);
+            $snippets = $snippets[0]->Snippets;
+            array_push($recent_snippets, $snippets);
+        }
+        return response()->json($recent_snippets);
     }
 
     public function create_snippet(Request $request)
     {
         $input = $request->all();
-        //Validation
-        $validator = Validator::make($input, [
-            'git_username' => 'required',
-            'snippet_title' => 'required',
-            'snippet_code' => 'required',
-            'snippet_language' => 'required',
-            'snippet_description' => 'required',
-        ]);
-        if ($validator->fails()) {
-            return response()->json(['alert' => 'Please fill out empty fields']);
+        $languages = Lang::all();
+        $languages = $languages[0]->Languages;
+        $snippet_id = "";
+        $data = [
+            [
+                'snippet_id' => $snippet_id, // Add logic for generating 6 digit id, has to do with assiging array index as id and when it gets deleted assign the updated array index
+                'snippet_language' => $input['snippet_language'],
+                'snippet_title' => $input['snippet_title'],
+                'snippet_code' => $input['snippet_code'],
+                'snippet_description' => $input['snippet_description'],
+                'snippet_tag' => $input['snippet_tag'],
+                'snippet_thumbnail' => base64_encode(file_get_contents($request->file('snippet_thumbnail'))),
+                'snippet_timestamp' => new DateTime(),
+                'snippet_demo_url' => $input['snippet_demo_url'],
+                'snippet_blog' => $input['snippet_blog'],
+                'snippet_author' => $input['git_username'],
+            ]
+        ];
+        // $url_string = 'https://api.github.com/users/'.$snippet_author;
+        // $response = Http::get($url_string);
+        // $author_info = ["author_info" => array($response['login'], $response['bio'], $response['avatar_url'], $response['html_url'])];
+        if (in_array($input['snippet_language'], $languages)) {
+            try {
+                Code::where('Language', $input['snippet_language'])->push('Snippets', $data);
+                $temp = News::all();
+                $temp = $temp[0]->Languages;
+                if (count($temp) > 30) {
+                    array_shift($temp);
+                    array_push($temp, $data);
+                    News::where('latest', 'exists', true)->update('latest', $temp);
+                    return true;
+                } else {
+                    News::where('latest', 'exists', true)->push('latest', $data);
+                    return true;
+                }
+            } catch (Exception $error) {
+                return response()->json(['alert' => 'Wrong Credentials, Please try again!']);
+            }
         } else {
-            $languages = Lang::all();
-            $languages = $languages[0]->Languages;
-            $data = [
-                [
-                    'snippet_id' => 0, // Add logic for generating 6 digit id, has to do with assiging array index as id and when it gets deleted assign the updated array index
-                    'snippet_language' => $input['snippet_language'],
-                    'snippet_title' => $input['snippet_title'],
-                    'snippet_code' => $input['snippet_code'],
-                    'snippet_description' => $input['snippet_description'],
-                    'snippet_tag' => $input['snippet_tag'],
-                    'snippet_thumbnail' => base64_encode(file_get_contents($request->file('snippet_thumbnail'))),
-                    'snippet_timestamp' => new DateTime(),
-                    'snippet_demo_url' => $input['snippet_demo_url'],
-                    'snippet_blog' => $input['snippet_blog'],
-                    'snippet_author' => $input['git_username'],
-                ]
-            ];
-            // $url_string = 'https://api.github.com/users/'.$snippet_author;
-            // $response = Http::get($url_string);
-            // $author_info = ["author_info" => array($response['login'], $response['bio'], $response['avatar_url'], $response['html_url'])];
-            if (in_array($input['snippet_language'], $languages)) {
-                try {
-                    Code::where('Language', $input['snippet_language'])->push('Snippets', [$data]);
-                    return true;
-                } catch (Exception $error) {
-                    return response()->json(['alert' => 'Wrong Credentials, Please try again!']);
-                }
-            } else {
-                try {
-                    $create_data = [
-                        'Language' => $input['snippet_language'],
-                        'Snippets' => [$data],
-                    ];
-                    Code::create($create_data);
-                    return true;
-                } catch (Exception $error) {
-                    return response()->json(['alert' => 'Wrong Credentials, Please try again!']);
-                }
+            try {
+                $create_data = [
+                    'Language' => $input['snippet_language'],
+                    'Snippets' => [$data],
+                ];
+                Code::create($create_data);
+                Lang::where('Languages', '')->push($input['snippet_language']);
+                News::where('latest', '')->push($data);
+                return true;
+            } catch (Exception $error) {
+                return response()->json(['alert' => 'Wrong Credentials, Please try again!']);
             }
         }
     }
@@ -109,6 +107,7 @@ class CodeController extends Controller
         // return $data;
         try {
             Code::where('Language', $language)->pull('Snippets', [ ['snippet_id' => $snippet_id] ]);
+            News::where('latest', 'exists', true)->pull('latest', ['snippet_id' => $snippet_id]);
             return true;
         } catch (Exception $error) {
             return response()->json(['alert' => 'Something went wrong, Please try again!']);
