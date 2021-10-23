@@ -24,31 +24,21 @@ class UserController extends Controller
     public function author_login(Request $request)
     {
         $input = $request->all();
+        $git_username = $input['git_username'];
+        $password = $input['password'];
 
-        //Validation
-        $validator = Validator::make($input, [
-            'git_username' => 'required',
-            'password' => 'required',
-        ]);
-        if ($validator->fails()) {
-            return response()->json(['alert' => 'Please fill out empty fields']);
+        //Authenciate user credentials
+        $data = array(
+            'username' => $git_username,
+            'password' => $password
+        );
+        if (Auth::attempt($data)) {
+            $url_string = 'https://api.github.com/users/'.$git_username;
+            $response = Http::get($url_string);
+            $author_info = ["author_info" => array($response['login'], $response['bio'], $response['avatar_url'], $response['html_url'])];
+            return response()->json([$author_info]);
         } else {
-            $git_username = $input['git_username'];
-            $password = $input['password'];
-
-            //Authenciate user credentials
-            $data = array(
-                'username' => $git_username,
-                'password' => $password
-            );
-            if (Auth::attempt($data)) {
-                $url_string = 'https://api.github.com/users/'.$git_username;
-                $response = Http::get($url_string);
-                $author_info = ["author_info" => array($response['login'], $response['bio'], $response['avatar_url'], $response['html_url'])];
-                return response()->json([$author_info]);
-            } else {
-                return response()->json(['alert' => 'Wrong Credentials, Please try again!']);
-            }
+            return response()->json(['alert' => 'Wrong Credentials, Please try again!']);
         }
     }
 }
