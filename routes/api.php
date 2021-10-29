@@ -30,6 +30,7 @@ Route::post('/add_language', [CodeController::class, 'add_language']);
 
 //Snippet related APIs
 Route::get('/display', [CodeController::class, 'display']);
+Route::get('/search/{snipptet_id}', [CodeController::class, 'search']);
 
 //User related APIs
 Route::get('/author_details', [UserController::class, 'author_details']);

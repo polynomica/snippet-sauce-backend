@@ -20,6 +20,46 @@ class CodeController extends Controller
         return response()->json($data);
     }
 
+    public function search($snippet_id)
+    {
+        $language = substr($snippet_id, 0, 3);
+        $id = (int)substr($snippet_id, 3);
+        $code_language = '';
+        $snippet_index = '';
+        $data = Lang::all();
+        $lang = $data[0]->short_form;
+        for ($i=0; $i < count($lang); $i++) {
+            foreach ($lang[$i] as $key => $value) {
+                if ($value == $language) {
+                    $code_language = $key;
+                    break;
+                }
+            }
+        }
+        $search_response = Code::where('Language', $code_language)->get();
+        if (count($search_response) == 0) {
+            return response()->json(['alert' => 'No snippet found, check your sauce!']);
+        } else {
+            $search_response = $search_response[0]->Snippets;
+            for ($i=0; $i < count($search_response); $i++) {
+                foreach ($search_response[$i] as $key => $value) {
+                    if ($key == 'id') {
+                        if ($value == $id) {
+                            $snippet_index = $i;
+                            break;
+                        }
+                    }
+                }
+            }
+            try {
+                $response_data = $search_response[$snippet_index];
+                return response()->json($response_data);
+            } catch (Exception $error) {
+                return response()->json(['alert' => 'Something went wrong, Please try again!']);
+            }
+        }
+    }
+
     public function add_language(Request $request)
     {
         $input = $request->all();
