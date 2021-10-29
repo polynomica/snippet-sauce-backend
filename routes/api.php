@@ -22,13 +22,14 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 //Snippet CRUD Operations
 Route::post('/create_snippet', [CodeController::class, 'create_snippet']);
-Route::get('/update_snippet', [CodeController::class, 'update_snippet']);
-Route::get('/delete_snippet/{language}/{snippet_id}', [CodeController::class, 'delete_snippet']);
+Route::post('/update_snippet', [CodeController::class, 'update_snippet']);
+Route::post('/delete_snippet/{language}/{snippet_id}', [CodeController::class, 'delete_snippet']);
+
+//Add new Language
+Route::post('/add_language', [CodeController::class, 'add_language']);
 
 //Snippet related APIs
 Route::get('/display', [CodeController::class, 'display']);
-Route::get('/short_form', [CodeController::class, 'short_form']);
-Route::get('/thumbnail', [CodeController::class, 'thumbnail']);
 
 //User related APIs
 Route::get('/author_details', [UserController::class, 'author_details']);
