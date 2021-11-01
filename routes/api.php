@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CodeController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\LangController;
+use App\Http\Controllers\DisplayController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,18 +22,20 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-//Snippet CRUD Operations
-Route::post('/create_snippet', [CodeController::class, 'create_snippet']);
-Route::post('/update_snippet', [CodeController::class, 'update_snippet']);
-Route::post('/delete_snippet/{language}/{snippet_id}', [CodeController::class, 'delete_snippet']);
-
-//Add new Language
-Route::post('/add_language', [CodeController::class, 'add_language']);
+//Admin related APIs
+Route::post('/admin_login', [UserController::class, 'admin_login']);
+Route::get('/author_details/{git_username}', [UserController::class, 'author_details']);
 
 //Snippet related APIs
-Route::get('/display', [CodeController::class, 'display']);
-Route::get('/search/{snipptet_id}', [CodeController::class, 'search']);
+Route::get('/filter', [DisplayController::class, 'filter']);
+Route::get('/display', [DisplayController::class, 'display']);
+Route::get('/search/{snippet_id}', [DisplayController::class, 'search']);
 
-//User related APIs
-Route::get('/author_details', [UserController::class, 'author_details']);
-Route::post('/author_login', [UserController::class, 'author_login']);
+//Language CRUD Operations
+Route::post('/add_language', [LangController::class, 'add_language']);
+Route::post('/update_language/{previous_language}', [LangController::class, 'update_language']);
+
+//Snippet CRUD Operations
+Route::get('/create_snippet', [CodeController::class, 'create_snippet']);
+Route::post('/update_snippet', [CodeController::class, 'update_snippet']);
+Route::post('/delete_snippet/{snippet_id}', [CodeController::class, 'delete_snippet']);
