@@ -27,7 +27,7 @@ Route::post('/admin_login', [UserController::class, 'admin_login']);
 Route::get('/author_details/{git_username}', [UserController::class, 'author_details']);
 
 //Snippet related APIs
-Route::get('/filter', [DisplayController::class, 'filter']);
+Route::post('/filter', [DisplayController::class, 'filter']);
 Route::get('/display', [DisplayController::class, 'display']);
 Route::get('/search/{snippet_id}', [DisplayController::class, 'search']);
 
@@ -36,6 +36,6 @@ Route::post('/add_language', [LangController::class, 'add_language']);
 Route::post('/update_language/{previous_language}', [LangController::class, 'update_language']);
 
 //Snippet CRUD Operations
-Route::get('/create_snippet', [CodeController::class, 'create_snippet']);
+Route::post('/create_snippet', [CodeController::class, 'create_snippet']);
 Route::post('/update_snippet', [CodeController::class, 'update_snippet']);
 Route::post('/delete_snippet/{snippet_id}', [CodeController::class, 'delete_snippet']);
