@@ -37,10 +37,34 @@ class DisplayController extends Controller
     {
         $data = News::all();
         $data = $data[0]->latest;
+        
+        if (count($data) == 0) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Currently it seems that there no snippets, new snippets will be added soon!'
+            ]);
+        }
+
         $data = array_reverse($data);   //Arrange data by newest first
+        $removed_fields = [
+            'snippet_number',
+            'snippet_code',
+            'snippet_description',
+            'snippet_tag',
+            'snippet_seo',
+            'snippet_demo_url',
+            'snippet_blog'
+        ];
+        for ($i=0; $i < count($data); $i++) {
+            foreach ($data[$i] as $key => $value) {
+                if (in_array($key, $removed_fields)) {
+                    unset($data[$i][$key]);
+                }
+            }
+        }
         return response()->json([
             'status' => true,
-            'data' => $data
+            'snippet_data' => $data
         ]);
     }
 
@@ -81,7 +105,7 @@ class DisplayController extends Controller
                 $response_data = $search_response[$snippet_index];
                 return response()->json([
                     'status' => true,
-                    'data' => $response_data
+                    'snippet_data' => $response_data
                 ]);
             } catch (Exception $error) {
                 return response()->json([
@@ -96,20 +120,45 @@ class DisplayController extends Controller
     {
         $input = $request->all();
         $lang = $input['language'];
-        $title = $input['snippet_title'];
 
-        //Four possible conditions based on given inputs
-        if (empty($lang) and empty($title)) {
+        //Two possible conditions based on given inputs
+        if (empty($lang)) {
             $data = News::all();
             $data = $data[0]->latest;
             $data = array_reverse($data);
+
+            $removed_fields = [
+                'snippet_number',
+                'snippet_code',
+                'snippet_description',
+                'snippet_tag',
+                'snippet_seo',
+                'snippet_demo_url',
+                'snippet_blog'
+            ];
+            for ($i=0; $i < count($data); $i++) {
+                foreach ($data[$i] as $key => $value) {
+                    if (in_array($key, $removed_fields)) {
+                        unset($data[$i][$key]);
+                    }
+                }
+            }
+
             return response()->json([
                 'status' => true,
-                'data' => $data
+                'snippet_data' => $data
             ]);
-        } elseif (empty($title)) {
-            $data = Code::where('Language', $lang)->get();
-            $data = $data[0]->Snippets;
+        } else {
+            $lang_data = Code::where('Language', $lang)->get();
+
+            if (count($lang_data) == 0) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Currently it seems that there no snippets for '.$lang.', Be the first to add one!'
+                ]);
+            }
+
+            $data = $lang_data[0]->Snippets;
 
             if (count($data) == 0) {
                 return response()->json([
@@ -118,52 +167,53 @@ class DisplayController extends Controller
                 ]);
             }
 
-            return response()->json([
-                'status' => true,
-                'data' => $data
-            ]);
-        } elseif (empty($lang)) {
-            $data = Code::all();
-            $snippet_data = [];
-
+            $removed_fields = [
+                'snippet_number',
+                'snippet_code',
+                'snippet_description',
+                'snippet_tag',
+                'snippet_demo_url',
+                'snippet_blog'
+            ];
             for ($i=0; $i < count($data); $i++) {
-                $snips = $data[$i]->Snippets;
-                for ($j=0; $j < count($snips); $j++) {
-                    if ($snips[$j]['snippet_title'] == $title) {
-                        array_push($snippet_data, $snips[$j]);
-                        break;
+                foreach ($data[$i] as $key => $value) {
+                    if (in_array($key, $removed_fields)) {
+                        unset($data[$i][$key]);
                     }
                 }
             }
-            if (count($snippet_data) == 0) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Currently it seems that there no snippets for '.$title.', Be the first to add one!'
-                ]);
-            }
 
             return response()->json([
                 'status' => true,
-                'data' => $snippet_data
+                'snippet_data' => $data
             ]);
-        } else {
-            $data = Code::where('Language', $lang)->get();
-            $data = $data[0]->Snippets;
+        }
+    }
 
-            for ($i=0; $i < count($data); $i++) {
-                if ($data[$i]['snippet_title'] == $title) {
-                    return response()->json([
-                        'status' => true,
-                        'data' => $data[$i]
-                    ]);
+    public function title_search($title)
+    {
+        $data = Code::all();
+        $snippet_data = [];
+
+        for ($i=0; $i < count($data); $i++) {
+            $snips = $data[$i]->Snippets;
+            for ($j=0; $j < count($snips); $j++) {
+                if ($snips[$j]['snippet_title'] == $title) {
+                    array_push($snippet_data, $snips[$j]);
                     break;
                 }
             }
-
+        }
+        if (count($snippet_data) == 0) {
             return response()->json([
                 'status' => false,
-                'message' => 'Currently it seems that there no snippets for '.$title.' in '.$lang.'. Be the first to add this!'
+                'message' => 'Currently it seems that there no snippets for '.$title.', Be the first to add one!'
             ]);
         }
+
+        return response()->json([
+            'status' => true,
+            'snippet_data' => $snippet_data
+        ]);
     }
 }

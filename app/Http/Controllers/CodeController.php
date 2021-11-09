@@ -154,6 +154,15 @@ class CodeController extends Controller
             //Preparing the input data
             $rand_value = $free_id[ mt_rand(0, (count($free_id) - 1)) ];
             $snippet_id = $string.sprintf("%06s", $rand_value);
+            $response = app('App\Http\Controllers\UserController')->author_details($input['snippet_author']);
+            $response = $response->getData();
+            if ( !($response->status) ) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Check github username.'
+                ]);
+            }
+            $author_pic = $response->author_avatar;
             $data = [
                 [
                     'snippet_id' => $snippet_id,
@@ -169,6 +178,7 @@ class CodeController extends Controller
                     'snippet_demo_url' => $input['snippet_demo_url'],
                     'snippet_blog' => $input['snippet_blog'],
                     'snippet_author' => $input['snippet_author'],
+                    'author_pic' => $author_pic,
                 ]
             ];
 
@@ -238,6 +248,15 @@ class CodeController extends Controller
             $info = $info[0]->Snippets;
             $timestamp = Carbon::now();
             $timestamp = $timestamp->toISOString();
+            $response = app('App\Http\Controllers\UserController')->author_details($input['snippet_author']);
+            $response = $response->getData();
+            if ( !($response->status) ) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Check github username.'
+                ]);
+            }
+            $author_pic = $response->author_avatar;
             $updated_data = [
                 [
                     'snippet_id' => $snippet_id,
@@ -253,6 +272,7 @@ class CodeController extends Controller
                     'snippet_demo_url' => $input['snippet_demo_url'],
                     'snippet_blog' => $input['snippet_blog'],
                     'snippet_author' => $input['snippet_author'],
+                    'author_pic' => $author_pic,
                 ]
             ];
 
@@ -307,7 +327,7 @@ class CodeController extends Controller
         //Checking if 
         if (count($search_response) == 0) {
             return response()->json([
-                'alert' => 'No snippet found, check your sauce!'
+                'message' => 'No snippet found, check your sauce!'
             ]);
         } else {
             $temp = 0;
