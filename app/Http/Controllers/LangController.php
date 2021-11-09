@@ -37,7 +37,7 @@ class LangController extends Controller
             foreach ($snip_short_form[$i] as $key => $value) {
                 if ($input['short_form'] == $value) {
                     return response()->json([
-                        'alert' => 'Short form already exists, Please choose a new short form.'
+                        'message' => 'Short form already exists, Please choose a new short form.'
                     ]);
                 }
             }
@@ -45,7 +45,7 @@ class LangController extends Controller
 
         if ( in_array($input['language_name'], $lang_data) ) {
             return response()->json([
-                'alert' => 'Language already exists.'
+                'message' => 'Language already exists.'
             ]);
         } else {
             try {
@@ -78,7 +78,7 @@ class LangController extends Controller
         //Checking if entered Language already exists
         if ( in_array($input['language_name'], $languages) ) {
             return response()->json([
-                'alert' => 'Language already exists.'
+                'message' => 'Language already exists.'
             ]);
         } else {
             try {

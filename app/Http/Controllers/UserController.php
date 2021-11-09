@@ -14,6 +14,13 @@ class UserController extends Controller
         //Fetch author details using github REST API
         $url_string = 'https://api.github.com/users/'.$git_username;
         $response = Http::get($url_string);
+        $response = json_decode($response, true);
+        if (array_key_exists('message', $response)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Check github username.'
+            ]);
+        }
         $author_info = [
             $response['login'],
             $response['bio'],
