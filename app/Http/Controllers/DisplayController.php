@@ -6,6 +6,7 @@ use Exception;
 use App\Models\Code;
 use App\Models\Lang;
 use App\Models\News;
+use App\Models\Allot;
 use Illuminate\Http\Request;
 
 class DisplayController extends Controller
@@ -31,6 +32,19 @@ class DisplayController extends Controller
         $return_data[0] = $id;
         $return_data[1] = $code_language;
         return $return_data;
+    }
+
+    public function total_snippets()
+    {
+        $data = Allot::all();
+        $total = 0;
+        for ($i=0; $i < count($data); $i++) {
+            $total = $total + count( $data[$i]['allotted'] );
+        }
+        return response()->json([
+            'status' => true,
+            'total_snippets' => $total
+        ]);
     }
 
     public function display()
@@ -110,7 +124,7 @@ class DisplayController extends Controller
             } catch (Exception $error) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Something went wrong, Please try again!'
+                    'message' => 'No snippet found, check your sauce!'
                 ]);
             }
         }
