@@ -29,6 +29,7 @@ Route::get('/author_details/{git_username}', [UserController::class, 'author_det
 //Snippet related APIs
 Route::post('/filter', [DisplayController::class, 'filter']);
 Route::get('/display', [DisplayController::class, 'display']);
+Route::get('/total', [DisplayController::class, 'total_snippets']);
 Route::get('/search/{snippet_id}', [DisplayController::class, 'search']);
 
 //Language CRUD Operations
