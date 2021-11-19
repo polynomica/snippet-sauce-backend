@@ -90,7 +90,7 @@ class CodeController extends Controller
                     ]);
                     return response()->json([
                         'status' => true,
-                        'message' => 'Snippet added successfully.'
+                        'message' => 'Snippet removed successfully.'
                     ]);
                 } catch (Exception $error) {
                     return response()->json([
