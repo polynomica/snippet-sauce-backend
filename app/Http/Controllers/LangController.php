@@ -10,6 +10,56 @@ use Illuminate\Http\Request;
 
 class LangController extends Controller
 {
+    public function get_languages()
+    {
+        $languages = Lang::all();
+        $languages = $languages[0]->Languages;
+        return response()->json([
+            'status' => true,
+            'languages' => $languages
+        ]);
+    }
+
+    public function language_details($language)
+    {
+        $data = Lang::all();
+        $languages = $data[0]->Languages;
+        $short_form = $data[0]->short_form;
+        $thumbnail = $data[0]->thumbnail;
+        if ( in_array($language, $languages) ) {
+            $lang_short_form = '';
+            $lang_thumbnail = '';
+            for ($i=0; $i < count($short_form); $i++) {
+                foreach ($short_form[$i] as $key => $value) {
+                    if ($key == $language) {
+                        $lang_short_form = $value;
+                        break;
+                    }
+                }
+            }
+            for ($i=0; $i < count($thumbnail); $i++) {
+                foreach ($thumbnail[$i] as $key => $value) {
+                    if ($key == $language) {
+                        $lang_thumbnail = $value;
+                        break;
+                    }
+                }
+            }
+            return response()->json([
+                'status' => true,
+                'language' => $language,
+                'short_form' => $lang_short_form,
+                'thumbnail' => $lang_thumbnail
+            ]);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => "No such language exists."
+            ]);
+        }
+        
+    }
+
     public function add_language(Request $request)
     {
         //Formatting input data
@@ -44,6 +94,7 @@ class LangController extends Controller
 
         if ( in_array($input['language_name'], $lang_data) ) {
             return response()->json([
+                'status' => false,
                 'message' => 'Language already exists.'
             ]);
         } else {

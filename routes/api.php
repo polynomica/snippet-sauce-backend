@@ -33,6 +33,8 @@ Route::get('/total', [DisplayController::class, 'total_snippets']);
 Route::get('/search/{snippet_id}', [DisplayController::class, 'search']);
 
 //Language CRUD Operations
+Route::get('/languages', [LangController::class, 'get_languages']);
+Route::get('/language_detail/{language}', [LangController::class, 'language_details']);
 Route::post('/add_language', [LangController::class, 'add_language']);
 Route::post('/update_language/{previous_language}', [LangController::class, 'update_language']);
 
