@@ -14,7 +14,6 @@ class LangController extends Controller
     {
         //Formatting input data
         $input = $request->all();
-        $lang_thumbnail = base64_encode( file_get_contents($request->file('thumbnail')) );
         $data = Lang::all();
         $lang_data = $data[0]->Languages;
         $create_data = [
@@ -29,7 +28,7 @@ class LangController extends Controller
             $input['language_name'] => $input['short_form'],
         ];
         $thumbnail = [
-            $input['language_name'] => $lang_thumbnail,
+            $input['language_name'] => $input['thumbnail'],
         ];
         $snip_short_form = $data[0]->short_form;
 
@@ -73,7 +72,6 @@ class LangController extends Controller
         $data = Lang::all();
         $languages = $data[0]->Languages;
         $thumbnail = $data[0]->thumbnail;
-        $lang_thumbnail = base64_encode(file_get_contents($request->file('thumbnail')));
 
         //Checking if entered Language already exists
         if ( in_array($input['language_name'], $languages) ) {
@@ -88,7 +86,7 @@ class LangController extends Controller
                     foreach ($thumbnail[$i] as $key => $value) {
                         if ($key == $previous_language) {
                             unset($thumbnail[$i][$key]);
-                            $thumbnail[$i][ $input['language_name'] ] = $lang_thumbnail;
+                            $thumbnail[$i][ $input['language_name'] ] = $input['thumbnail'];
                         }
                     }
                 }
