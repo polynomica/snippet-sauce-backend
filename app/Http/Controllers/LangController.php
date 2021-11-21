@@ -123,6 +123,7 @@ class LangController extends Controller
         $data = Lang::all();
         $languages = $data[0]->Languages;
         $thumbnail = $data[0]->thumbnail;
+        $short_form = $data[0]->short_form;
 
         //Checking if entered Language already exists
         if ( in_array($input['language_name'], $languages) ) {
@@ -133,11 +134,20 @@ class LangController extends Controller
             try {
                 //Finding index of previous language and thumbnail and updating the array with new data
                 $languages[ array_search($previous_language, $languages) ] = $input['language_name'];
-                for ($i=0; $i < count($thumbnail); $i++) { 
+                for ($i=0; $i < count($thumbnail); $i++) {
                     foreach ($thumbnail[$i] as $key => $value) {
                         if ($key == $previous_language) {
                             unset($thumbnail[$i][$key]);
                             $thumbnail[$i][ $input['language_name'] ] = $input['thumbnail'];
+                        }
+                    }
+                }
+
+                for ($i=0; $i < count($short_form); $i++) {
+                    foreach ($short_form[$i] as $key => $value) {
+                        if ($key == $previous_language) {
+                            unset($short_form[$i][$key]);
+                            $short_form[$i][ $input['language_name'] ] = $value;
                         }
                     }
                 }
@@ -148,6 +158,9 @@ class LangController extends Controller
                 ]);
                 Lang::where('Languages', 'exists', true)->update([
                     'thumbnail' => $thumbnail
+                ]);
+                Lang::where('Languages', 'exists', true)->update([
+                    'short_form' => $short_form
                 ]);
                 Code::where('Language', $previous_language)->update([
                     'Language' => $input['language_name']
