@@ -117,6 +117,15 @@ class DisplayController extends Controller
 
             try {
                 $response_data = $search_response[$snippet_index];
+                $removed_fields = [
+                    'snippet_number',
+                    'snippet_thumbnail'
+                ];
+                foreach ($response_data as $key => $value) {
+                    if (in_array($key, $removed_fields)) {
+                        unset($response_data[$key]);
+                    }
+                }
                 return response()->json([
                     'status' => true,
                     'snippet_data' => $response_data
