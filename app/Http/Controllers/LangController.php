@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use App\Models\News;
 use App\Models\Code;
 use App\Models\Lang;
 use App\Models\Allot;
@@ -121,9 +122,13 @@ class LangController extends Controller
     {
         $input = $request->all();
         $data = Lang::all();
+        $code_data = Code::where('Language', $previous_language)->get();
+        $latest_data = News::all();
         $languages = $data[0]->Languages;
         $thumbnail = $data[0]->thumbnail;
         $short_form = $data[0]->short_form;
+        $code_data = $code_data[0]->Snippets;
+        $latest_data = $latest_data[0]->latest;
 
         //Checking if entered Language already exists
         if ( in_array($input['language_name'], $languages) ) {
@@ -152,21 +157,33 @@ class LangController extends Controller
                     }
                 }
 
+                for ($i=0; $i < count($code_data); $i++) {
+                    if ($code_data[$i]['snippet_language'] == $previous_language) {
+                        $code_data[$i]['snippet_language'] = $input['language_name'];
+                    }
+                }
+
+                for ($i=0; $i < count($latest_data); $i++) {
+                    if ($latest_data[$i]['snippet_language'] == $previous_language) {
+                        $latest_data[$i]['snippet_language'] = $input['language_name'];
+                    }
+                }
+
                 //Peforming changes in DB
                 Lang::where('Languages', 'exists', true)->update([
-                    'Languages' => $languages
-                ]);
-                Lang::where('Languages', 'exists', true)->update([
+                    'Languages' => $languages,
+                    'short_form' => $short_form,
                     'thumbnail' => $thumbnail
-                ]);
-                Lang::where('Languages', 'exists', true)->update([
-                    'short_form' => $short_form
-                ]);
-                Code::where('Language', $previous_language)->update([
-                    'Language' => $input['language_name']
                 ]);
                 Allot::where('Language', $previous_language)->update([
                     'Language' => $input['language_name']
+                ]);
+                News::where('latest', 'exists', true)->update([
+                    'latest' => $latest_data
+                ]);
+                Code::where('Language', $previous_language)->update([
+                    'Language' => $input['language_name'],
+                    'Snippets' => $code_data
                 ]);
                 return response()->json([
                     'status' => true,

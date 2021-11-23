@@ -163,6 +163,7 @@ class CodeController extends Controller
                 ]);
             }
             $author_pic = $response->author_avatar;
+            $author_bio = $response->author_bio;
             $data = [
                 [
                     'snippet_id' => $snippet_id,
@@ -179,6 +180,7 @@ class CodeController extends Controller
                     'snippet_blog' => $input['snippet_blog'],
                     'snippet_author' => $input['snippet_author'],
                     'author_pic' => $author_pic,
+                    'author_bio' => $author_bio,
                 ]
             ];
 
@@ -257,6 +259,7 @@ class CodeController extends Controller
                 ]);
             }
             $author_pic = $response->author_avatar;
+            $author_bio = $response->author_bio;
             $updated_data = [
                 [
                     'snippet_id' => $snippet_id,
@@ -273,6 +276,7 @@ class CodeController extends Controller
                     'snippet_blog' => $input['snippet_blog'],
                     'snippet_author' => $input['snippet_author'],
                     'author_pic' => $author_pic,
+                    'author_bio' => $author_bio,
                 ]
             ];
 
