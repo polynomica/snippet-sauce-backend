@@ -40,5 +40,5 @@ Route::post('/update_language/{previous_language}', [LangController::class, 'upd
 
 //Snippet CRUD Operations
 Route::post('/create_snippet', [CodeController::class, 'create_snippet']);
-Route::post('/update_snippet', [CodeController::class, 'update_snippet']);
+Route::post('/update_snippet/{snippet_id}', [CodeController::class, 'update_snippet']);
 Route::post('/delete_snippet/{snippet_id}', [CodeController::class, 'delete_snippet']);
