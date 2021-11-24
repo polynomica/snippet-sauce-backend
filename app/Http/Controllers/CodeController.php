@@ -213,10 +213,9 @@ class CodeController extends Controller
         }
     }
 
-    public function update_snippet(Request $request)
+    public function update_snippet(Request $request, $snippet_id)
     {
         $input = $request->all();
-        $snippet_id = $input['snippet_id'];
         $extract_data = $this->extract_info($snippet_id);
         $id = $extract_data[0];
         $code_language = $extract_data[1];
@@ -258,8 +257,17 @@ class CodeController extends Controller
                     'message' => 'Check github username.'
                 ]);
             }
+            $thumb_response = app('App\Http\Controllers\LangController')->language_details($input['snippet_language']);
+            $thumb_response = $thumb_response->getData();
+            if ( !($thumb_response->status) ) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Check github username.'
+                ]);
+            }
             $author_pic = $response->author_avatar;
             $author_bio = $response->author_bio;
+            $snippet_thumbnail = $thumb_response->thumbnail;
             $updated_data = [
                 [
                     'snippet_id' => $snippet_id,
@@ -270,7 +278,7 @@ class CodeController extends Controller
                     'snippet_description' => $input['snippet_description'],
                     'snippet_tag' => $input['snippet_tag'],
                     'snippet_seo' => $input['snippet_seo'],
-                    'snippet_thumbnail' => $input['snippet_thumbnail'],
+                    'snippet_thumbnail' => $snippet_thumbnail,
                     'snippet_timestamp' => $timestamp,
                     'snippet_demo_url' => $input['snippet_demo_url'],
                     'snippet_blog' => $input['snippet_blog'],
