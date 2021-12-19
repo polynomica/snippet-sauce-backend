@@ -131,7 +131,7 @@ class LangController extends Controller
         $latest_data = $latest_data[0]->latest;
 
         //Checking if entered Language already exists
-        if ( in_array($input['language_name'], $languages) ) {
+        if ( $previous_language != $input['language_name'] and in_array($input['language_name'], $languages) ) {
             return response()->json([
                 'message' => 'Language already exists.'
             ]);
@@ -160,12 +160,14 @@ class LangController extends Controller
                 for ($i=0; $i < count($code_data); $i++) {
                     if ($code_data[$i]['snippet_language'] == $previous_language) {
                         $code_data[$i]['snippet_language'] = $input['language_name'];
+                        $code_data[$i]['snippet_thumbnail'] = $input['thumbnail'];
                     }
                 }
 
                 for ($i=0; $i < count($latest_data); $i++) {
                     if ($latest_data[$i]['snippet_language'] == $previous_language) {
                         $latest_data[$i]['snippet_language'] = $input['language_name'];
+                        $latest_data[$i]['snippet_thumbnail'] = $input['thumbnail'];
                     }
                 }
 
