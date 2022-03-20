@@ -157,7 +157,7 @@ class LangController extends Controller
                     foreach ($logo[$i] as $key => $value) {
                         if ($key == $previous_language) {
                             unset($logo[$i][$key]);
-                            $logo[$i][ $input['language_name'] ] = $value;
+                            $logo[$i][ $input['lang_desc'] ] = $value;
                         }
                     }
                 }
@@ -166,7 +166,7 @@ class LangController extends Controller
                     foreach ($description[$i] as $key => $value) {
                         if ($key == $previous_language) {
                             unset($description[$i][$key]);
-                            $description[$i][ $input['language_name'] ] = $value;
+                            $description[$i][ $input['lang_logo'] ] = $value;
                         }
                     }
                 }
