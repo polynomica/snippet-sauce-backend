@@ -125,7 +125,7 @@ class DisplayController extends Controller
         $lang = $input['language'];
 
         //Two possible conditions based on given inputs
-        if (empty($lang)) {
+        if (empty($lang) or $lang == '') {
             $data = News::all();
             $data = $data[0]->latest;
             $data = array_reverse($data);
@@ -166,6 +166,15 @@ class DisplayController extends Controller
                 ]);
             }
 
+            $language_data = Lang::all();
+            $lang_logo = head( array_values( Arr::whereNotNull( data_get( $language_data[0], "logo.*.{$lang}" ) ) ) );
+            $lang_desc = head( array_values( Arr::whereNotNull( data_get( $language_data[0], "description.*.{$lang}" ) ) ) );
+            $filtered_language_data = [
+                'name' => $lang,
+                'logo' => $lang_logo,
+                'desc' => $lang_desc,
+            ];
+
             $removed_fields = [
                 'snippet_number',
                 'snippet_code',
@@ -180,7 +189,8 @@ class DisplayController extends Controller
 
             return response()->json([
                 'status' => true,
-                'snippet_data' => $data
+                'snippet_data' => $data,
+                'lang_data' => $filtered_language_data
             ]);
         }
     }
