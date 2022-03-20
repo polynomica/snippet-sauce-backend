@@ -7,6 +7,7 @@ use App\Models\Code;
 use App\Models\Lang;
 use App\Models\News;
 use App\Models\Allot;
+use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 
 class DisplayController extends Controller
@@ -69,13 +70,13 @@ class DisplayController extends Controller
             'snippet_demo_url',
             'snippet_blog'
         ];
-        for ($i=0; $i < count($data); $i++) {
-            foreach ($data[$i] as $key => $value) {
-                if (in_array($key, $removed_fields)) {
-                    unset($data[$i][$key]);
-                }
-            }
+        foreach ($data as $key => $value) {
+            Arr::forget($data[$key], $removed_fields);
         }
+        $response_data = [
+            'status' => true,
+            'snippet_data' => $data
+        ];
         return response()->json([
             'status' => true,
             'snippet_data' => $data
@@ -96,36 +97,15 @@ class DisplayController extends Controller
                 'message' => 'No snippet found, check your sauce!'
             ]);
         } else {
-            $temp = 0;
-            $snippet_index = '';
             $search_response = $search_response[0]->Snippets;
-
-            for ($i=0; $i < count($search_response); $i++) {
-                foreach ($search_response[$i] as $key => $value) {
-                    if ($key == 'snippet_number') {
-                        if ($value == $id) {
-                            $snippet_index = $i;
-                            $temp = 1;
-                            break;
-                        }
-                    }
-                }
-                if ($temp == 1) {
-                    break;
-                }
-            }
-
+            $snippet_index = array_search($id, data_get($search_response, "*.snippet_number"));
             try {
                 $response_data = $search_response[$snippet_index];
                 $removed_fields = [
                     'snippet_number',
                     'snippet_thumbnail'
                 ];
-                foreach ($response_data as $key => $value) {
-                    if (in_array($key, $removed_fields)) {
-                        unset($response_data[$key]);
-                    }
-                }
+                Arr::forget($response_data, $removed_fields);
                 return response()->json([
                     'status' => true,
                     'snippet_data' => $response_data
@@ -159,12 +139,8 @@ class DisplayController extends Controller
                 'snippet_demo_url',
                 'snippet_blog'
             ];
-            for ($i=0; $i < count($data); $i++) {
-                foreach ($data[$i] as $key => $value) {
-                    if (in_array($key, $removed_fields)) {
-                        unset($data[$i][$key]);
-                    }
-                }
+            foreach ($data as $key => $value) {
+                Arr::forget($data[$key], $removed_fields);
             }
 
             return response()->json([
@@ -198,12 +174,8 @@ class DisplayController extends Controller
                 'snippet_demo_url',
                 'snippet_blog'
             ];
-            for ($i=0; $i < count($data); $i++) {
-                foreach ($data[$i] as $key => $value) {
-                    if (in_array($key, $removed_fields)) {
-                        unset($data[$i][$key]);
-                    }
-                }
+            foreach ($data as $key => $value) {
+                Arr::forget($data[$key], $removed_fields);
             }
 
             return response()->json([
@@ -216,27 +188,32 @@ class DisplayController extends Controller
     public function title_search($title)
     {
         $data = Code::all();
-        $snippet_data = [];
+        // $snippet_data = [];
+        // echo $data;
+        // $data = data_get($data, "*.Snippets.*.snippet_title");
+        // $data = $data[0];
+        // $count = Str::contains($data, ['A']);
+        // dd($count, $data);
 
-        for ($i=0; $i < count($data); $i++) {
-            $snips = $data[$i]->Snippets;
-            for ($j=0; $j < count($snips); $j++) {
-                if ($snips[$j]['snippet_title'] == $title) {
-                    array_push($snippet_data, $snips[$j]);
-                    break;
-                }
-            }
-        }
-        if (count($snippet_data) == 0) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Currently it seems that there no snippets for '.$title.', Be the first to add one!'
-            ]);
-        }
+        // for ($i=0; $i < count($data); $i++) {
+        //     $snips = $data[$i]->Snippets;
+        //     for ($j=0; $j < count($snips); $j++) {
+        //         if ($snips[$j]['snippet_title'] == $title) {
+        //             array_push($snippet_data, $snips[$j]);
+        //             break;
+        //         }
+        //     }
+        // }
+        // if (count($snippet_data) == 0) {
+        //     return response()->json([
+        //         'status' => false,
+        //         'message' => 'Currently it seems that there no snippets for '.$title.', Be the first to add one!'
+        //     ]);
+        // }
 
-        return response()->json([
-            'status' => true,
-            'snippet_data' => $snippet_data
-        ]);
+        // return response()->json([
+        //     'status' => true,
+        //     'snippet_data' => $snippet_data
+        // ]);
     }
 }

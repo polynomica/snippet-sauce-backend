@@ -7,6 +7,7 @@ use App\Models\News;
 use App\Models\Code;
 use App\Models\Lang;
 use App\Models\Allot;
+use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 
 class LangController extends Controller
@@ -25,32 +26,18 @@ class LangController extends Controller
     {
         $data = Lang::all();
         $languages = $data[0]->Languages;
-        $short_form = $data[0]->short_form;
-        $thumbnail = $data[0]->thumbnail;
         if ( in_array($language, $languages) ) {
-            $lang_short_form = '';
-            $lang_thumbnail = '';
-            for ($i=0; $i < count($short_form); $i++) {
-                foreach ($short_form[$i] as $key => $value) {
-                    if ($key == $language) {
-                        $lang_short_form = $value;
-                        break;
-                    }
-                }
-            }
-            for ($i=0; $i < count($thumbnail); $i++) {
-                foreach ($thumbnail[$i] as $key => $value) {
-                    if ($key == $language) {
-                        $lang_thumbnail = $value;
-                        break;
-                    }
-                }
-            }
+            $lang_short_form = head( array_values( Arr::whereNotNull( data_get( $data[0], "short_form.*.{$language}" ) ) ) );
+            $lang_thumbnail = head( array_values( Arr::whereNotNull( data_get( $data[0], "thumbnail.*.{$language}" ) ) ) );
+            $lang_desc = head( array_values( Arr::whereNotNull( data_get( $data[0], "description.*.{$language}" ) ) ) );
+            $lang_logo = head( array_values( Arr::whereNotNull( data_get( $data[0], "logo.*.{$language}" ) ) ) );
             return response()->json([
                 'status' => true,
                 'language' => $language,
                 'short_form' => $lang_short_form,
-                'thumbnail' => $lang_thumbnail
+                'thumbnail' => $lang_thumbnail,
+                'logo' => $lang_logo,
+                'description' => $lang_desc
             ]);
         } else {
             return response()->json([
@@ -58,7 +45,6 @@ class LangController extends Controller
                 'message' => "No such language exists."
             ]);
         }
-        
     }
 
     public function add_language(Request $request)
@@ -80,6 +66,12 @@ class LangController extends Controller
         ];
         $thumbnail = [
             $input['language_name'] => $input['thumbnail'],
+        ];
+        $lang_logo = [
+            $input['language_name'] => $input['lang_logo'],
+        ];
+        $lang_desc = [
+            $input['language_name'] => $input['lang_desc'],
         ];
         $snip_short_form = $data[0]->short_form;
 
@@ -103,6 +95,8 @@ class LangController extends Controller
                 Lang::where('Languages', 'exists', true)->push('Languages', $input['language_name']);
                 Lang::where('Languages', 'exists', true)->push('short_form', $short_form);
                 Lang::where('Languages', 'exists', true)->push('thumbnail', $thumbnail);
+                Lang::where('Languages', 'exists', true)->push('logo', $lang_logo);
+                Lang::where('Languages', 'exists', true)->push('description', $lang_desc);
                 Code::create($create_data);
                 Allot::create($allotted_id);
                 return response()->json([
@@ -127,6 +121,8 @@ class LangController extends Controller
         $languages = $data[0]->Languages;
         $thumbnail = $data[0]->thumbnail;
         $short_form = $data[0]->short_form;
+        $logo = $data[0]->logo;
+        $description = $data[0]->description;
         $code_data = $code_data[0]->Snippets;
         $latest_data = $latest_data[0]->latest;
 
@@ -157,6 +153,24 @@ class LangController extends Controller
                     }
                 }
 
+                for ($i=0; $i < count($logo); $i++) {
+                    foreach ($logo[$i] as $key => $value) {
+                        if ($key == $previous_language) {
+                            unset($logo[$i][$key]);
+                            $logo[$i][ $input['language_name'] ] = $value;
+                        }
+                    }
+                }
+
+                for ($i=0; $i < count($description); $i++) {
+                    foreach ($description[$i] as $key => $value) {
+                        if ($key == $previous_language) {
+                            unset($description[$i][$key]);
+                            $description[$i][ $input['language_name'] ] = $value;
+                        }
+                    }
+                }
+
                 for ($i=0; $i < count($code_data); $i++) {
                     if ($code_data[$i]['snippet_language'] == $previous_language) {
                         $code_data[$i]['snippet_language'] = $input['language_name'];
@@ -175,7 +189,9 @@ class LangController extends Controller
                 Lang::where('Languages', 'exists', true)->update([
                     'Languages' => $languages,
                     'short_form' => $short_form,
-                    'thumbnail' => $thumbnail
+                    'thumbnail' => $thumbnail,
+                    'logo' => $logo,
+                    'description' => $description
                 ]);
                 Allot::where('Language', $previous_language)->update([
                     'Language' => $input['language_name']
