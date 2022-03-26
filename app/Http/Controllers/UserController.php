@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use App\Models\Users;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -64,6 +65,8 @@ class UserController extends Controller
                 $response['avatar_url'],
                 $response['html_url']
             ];
+            $admin_token = Users::select('_id')->where('username', $git_username)->get();
+            $admin_token = $admin_token[0]->_id;
             return response()->json([
                 'status' => true,
                 'admin_username' => $admin_info[0],
@@ -71,7 +74,8 @@ class UserController extends Controller
                 'admin_avatar' => $admin_info[2],
                 'admin_url' => $admin_info[3],
                 'logged_in' => true,
-                'role' => 'admin'
+                'role' => 'admin',
+                'admin_token' => $admin_token
             ]);
         } else {
             return response()->json([

@@ -35,10 +35,15 @@ Route::get('/search/{snippet_id}', [DisplayController::class, 'search']);
 //Language CRUD Operations
 Route::get('/languages', [LangController::class, 'get_languages']);
 Route::get('/language_detail/{language}', [LangController::class, 'language_details']);
-Route::post('/add_language', [LangController::class, 'add_language']);
-Route::post('/update_language/{previous_language}', [LangController::class, 'update_language']);
 
-//Snippet CRUD Operations
-Route::post('/create_snippet', [CodeController::class, 'create_snippet']);
-Route::post('/update_snippet/{snippet_id}', [CodeController::class, 'update_snippet']);
-Route::post('/delete_snippet/{snippet_id}', [CodeController::class, 'delete_snippet']);
+// Routes with Middleware
+Route::middleware('is_admin')->group(function () {
+    //Language CRUD Operations
+    Route::post('/add_language', [LangController::class, 'add_language']);
+    Route::post('/update_language/{previous_language}', [LangController::class, 'update_language']);
+
+    //Snippet CRUD Operations
+    Route::post('/create_snippet', [CodeController::class, 'create_snippet']);
+    Route::post('/update_snippet/{snippet_id}', [CodeController::class, 'update_snippet']);
+    Route::post('/delete_snippet/{snippet_id}', [CodeController::class, 'delete_snippet']);
+});

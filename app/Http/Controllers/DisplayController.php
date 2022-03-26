@@ -73,10 +73,6 @@ class DisplayController extends Controller
         foreach ($data as $key => $value) {
             Arr::forget($data[$key], $removed_fields);
         }
-        $response_data = [
-            'status' => true,
-            'snippet_data' => $data
-        ];
         return response()->json([
             'status' => true,
             'snippet_data' => $data
@@ -149,23 +145,6 @@ class DisplayController extends Controller
             ]);
         } else {
             $lang_data = Code::where('Language', $lang)->get();
-
-            if (count($lang_data) == 0) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Currently it seems that there no snippets for '.$lang.', Be the first to add one!'
-                ]);
-            }
-
-            $data = $lang_data[0]->Snippets;
-
-            if (count($data) == 0) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Currently it seems that there no snippets for '.$lang.', Be the first to add one!'
-                ]);
-            }
-
             $language_data = Lang::all();
             $lang_logo = head( array_values( Arr::whereNotNull( data_get( $language_data[0], "logo.*.{$lang}" ) ) ) );
             $lang_desc = head( array_values( Arr::whereNotNull( data_get( $language_data[0], "description.*.{$lang}" ) ) ) );
@@ -174,6 +153,24 @@ class DisplayController extends Controller
                 'logo' => $lang_logo,
                 'desc' => $lang_desc,
             ];
+
+            if (count($lang_data) == 0) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Currently it seems that there no snippets for '.$lang.', Be the first to add one!',
+                    'lang_data' => $filtered_language_data
+                ]);
+            }
+
+            $data = $lang_data[0]->Snippets;
+
+            if (count($data) == 0) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Currently it seems that there no snippets for '.$lang.', Be the first to add one!',
+                    'lang_data' => $filtered_language_data
+                ]);
+            }
 
             $removed_fields = [
                 'snippet_number',
