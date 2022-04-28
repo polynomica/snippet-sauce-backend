@@ -113,11 +113,7 @@ class CodeController extends Controller
         $languages = $languages[0]->Languages;
         $timestamp = Carbon::now();
         $timestamp = $timestamp->toISOString();
-        $valid = [];
-
-        for ($i=0; $i <= 999999; $i++) {
-            array_push($valid, $i);
-        }
+        $valid = range(0, 999999);
 
         //Checking if language exists or not
         if ( in_array($input['snippet_language'], $languages) ) {
@@ -336,7 +332,7 @@ class CodeController extends Controller
         $code_language = $data[1];
         $search_response = Code::where('Language', $code_language)->get();
 
-        //Checking if 
+        //Checking if
         if (count($search_response) == 0) {
             return response()->json([
                 'message' => 'No snippet found, check your sauce!'
