@@ -15,7 +15,7 @@ class DisplayController extends Controller
         $data = Allot::select('allotted')->where('allotted.0', 'exists', true)->get();
         $total = 0;
         foreach ($data as $value) {
-            $total = $total + count( $value['allotted'] );
+            $total = $total + count($value['allotted']);
         }
         return response()->json([
             'status' => true,
@@ -120,8 +120,8 @@ class DisplayController extends Controller
             ]);
         } else {
             $language_data = Lang::select("logo.{$lang}", "description.{$lang}")->first();
-            $lang_logo = head( array_filter( $language_data->logo ) );
-            $lang_desc = head( array_filter( $language_data->description ) );
+            $lang_logo = head(array_filter($language_data->logo));
+            $lang_desc = head(array_filter($language_data->description));
             $lang_logo = $lang_logo[$lang];
             $lang_desc = $lang_desc[$lang];
             $filtered_language_data = [
@@ -146,7 +146,7 @@ class DisplayController extends Controller
             if (empty($lang_data)) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Currently it seems that there no snippets for '.$lang.', Be the first to add one!',
+                    'message' => 'Currently it seems that there no snippets for ' . $lang . ', Be the first to add one!',
                     'lang_data' => $filtered_language_data
                 ]);
             } else {
@@ -154,7 +154,7 @@ class DisplayController extends Controller
                 if (empty($data)) {
                     return response()->json([
                         'status' => false,
-                        'message' => 'Currently it seems that there no snippets for '.$lang.', Be the first to add one!',
+                        'message' => 'Currently it seems that there no snippets for ' . $lang . ', Be the first to add one!',
                         'lang_data' => $filtered_language_data
                     ]);
                 } else {
@@ -171,7 +171,8 @@ class DisplayController extends Controller
 
     public function title_search($title)
     {
-        $data = Code::all();
+        return true;
+        // $data = Code::all();
         // $snippet_data = [];
         // echo $data;
         // $data = data_get($data, "*.Snippets.*.snippet_title");
