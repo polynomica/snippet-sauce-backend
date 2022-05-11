@@ -23,7 +23,7 @@ class CodeController extends Controller
         //Finding Language from its short form
         $data = Lang::all();
         $lang = $data[0]->short_form;
-        for ($i=0; $i < count($lang); $i++) {
+        for ($i = 0; $i < count($lang); $i++) {
             foreach ($lang[$i] as $key => $value) {
                 if ($value == $lang_code) {
                     $code_language = $key;
@@ -80,7 +80,7 @@ class CodeController extends Controller
         //Find and delete the snippet, if it exists in the recently added array
         $latest = News::all();
         $latest = $latest[0]->latest;
-        for ($i=0; $i < count($latest); $i++) {
+        for ($i = 0; $i < count($latest); $i++) {
             if ($latest[$i]['snippet_id'] == $snippet_id) {
                 unset($latest[$i]);
                 $latest = array_values($latest);
@@ -116,11 +116,11 @@ class CodeController extends Controller
         $valid = range(0, 999999);
 
         //Checking if language exists or not
-        if ( in_array($input['snippet_language'], $languages) ) {
+        if (in_array($input['snippet_language'], $languages)) {
             $snippet_thumbnail = '';
             $string = '';
 
-            for ($i=0; $i < count($thumbnail); $i++) {
+            for ($i = 0; $i < count($thumbnail); $i++) {
                 foreach ($thumbnail[$i] as $key => $value) {
                     if ($key == $input['snippet_language']) {
                         $snippet_thumbnail = $value;
@@ -128,7 +128,7 @@ class CodeController extends Controller
                 }
             }
 
-            for ($i=0; $i < count($short_form); $i++) {
+            for ($i = 0; $i < count($short_form); $i++) {
                 foreach ($short_form[$i] as $key => $value) {
                     if ($key == $input['snippet_language']) {
                         $string = $value;
@@ -137,7 +137,7 @@ class CodeController extends Controller
             }
             $occupied = Allot::where('Language', $input['snippet_language'])->get();
             $occupied = $occupied[0]->allotted;
-            $free_id = array_values( array_diff($valid, $occupied) );
+            $free_id = array_values(array_diff($valid, $occupied));
 
             //Checking if all IDs are allotted or not
             if ($free_id == null) {
@@ -148,11 +148,11 @@ class CodeController extends Controller
             }
 
             //Preparing the input data
-            $rand_value = $free_id[ mt_rand(0, (count($free_id) - 1)) ];
-            $snippet_id = $string.sprintf("%06s", $rand_value);
+            $rand_value = $free_id[mt_rand(0, (count($free_id) - 1))];
+            $snippet_id = $string . sprintf("%06s", $rand_value);
             $response = app('App\Http\Controllers\UserController')->author_details($input['snippet_author']);
             $response = $response->getData();
-            if ( !($response->status) ) {
+            if (!($response->status)) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Check github username.'
@@ -183,7 +183,7 @@ class CodeController extends Controller
             try {
                 Code::where('Language', $input['snippet_language'])->push('Snippets', $data);
                 Allot::where('Language', $input['snippet_language'])->push('allotted', $rand_value);
-                $status = ( $this->update_latest($data) )->getData();
+                $status = ($this->update_latest($data))->getData();
                 if ($status->status) {
                     return response()->json([
                         'status' => true,
@@ -220,7 +220,7 @@ class CodeController extends Controller
         if ($code_language != $input['snippet_language']) {
             //If updated language is not equal to previous language then port the updated snippet to new language after deleting its instance from previous language
             try {
-                $data = ( $this->create_snippet($request) )->getData();    //getData() is used to get contents of json response
+                $data = ($this->create_snippet($request))->getData();    //getData() is used to get contents of json response
                 if ($data->status) {
                     $this->delete_snippet($snippet_id);
                     return response()->json([
@@ -247,7 +247,7 @@ class CodeController extends Controller
             $timestamp = $timestamp->toISOString();
             $response = app('App\Http\Controllers\UserController')->author_details($input['snippet_author']);
             $response = $response->getData();
-            if ( !($response->status) ) {
+            if (!($response->status)) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Check github username.'
@@ -255,7 +255,7 @@ class CodeController extends Controller
             }
             $thumb_response = app('App\Http\Controllers\LangController')->language_details($input['snippet_language']);
             $thumb_response = $thumb_response->getData();
-            if ( !($thumb_response->status) ) {
+            if (!($thumb_response->status)) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Check github username.'
@@ -285,7 +285,7 @@ class CodeController extends Controller
             ];
 
             $temp = 0;
-            for ($i=0; $i < count($info); $i++) {
+            for ($i = 0; $i < count($info); $i++) {
                 foreach ($info[$i] as $key => $value) {
                     if ($info[$i]['snippet_number'] == $id) {
                         unset($info[$i]);
@@ -304,8 +304,8 @@ class CodeController extends Controller
                 Code::where('Language', $input['snippet_language'])->update([
                     'Snippets' => $info
                 ]);
-                $status_1 = ( $this->delete_latest($snippet_id) )->getData();
-                $status_2 = ( $this->update_latest($updated_data) )->getData();
+                $status_1 = ($this->delete_latest($snippet_id))->getData();
+                $status_2 = ($this->update_latest($updated_data))->getData();
                 if ($status_1->status == false or $status_2->status == false) {
                     return response()->json([
                         'status' => false,
@@ -343,7 +343,7 @@ class CodeController extends Controller
             $search_response = $search_response[0]->Snippets;
 
             //Finding the snippet from language based on its id, as every snippet will always be unique break the loop once we find it to reduce time complexity
-            for ($i=0; $i < count($search_response); $i++) {
+            for ($i = 0; $i < count($search_response); $i++) {
                 foreach ($search_response[$i] as $key => $value) {
                     if ($key == 'snippet_number') {
                         if ($value == $id) {
@@ -374,7 +374,7 @@ class CodeController extends Controller
 
         //Free up the unique Id of the deleted snippet
         try {
-            $status = ( $this->delete_latest($snippet_id) )->getData();
+            $status = ($this->delete_latest($snippet_id))->getData();
             if ($status->status == false) {
                 return response()->json([
                     'status' => false,
