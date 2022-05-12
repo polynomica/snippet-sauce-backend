@@ -7,15 +7,14 @@ use App\Models\News;
 use App\Models\Code;
 use App\Models\Lang;
 use App\Models\Allot;
-use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 
 class LangController extends Controller
 {
     public function get_languages()
     {
-        $languages = Lang::all();
-        $languages = $languages[0]->Languages;
+        $languages = Lang::select('Languages')->first();
+        $languages = $languages->Languages;
         return response()->json([
             'status' => true,
             'languages' => $languages
@@ -24,13 +23,18 @@ class LangController extends Controller
 
     public function language_details($language)
     {
-        $data = Lang::all();
-        $languages = $data[0]->Languages;
-        if ( in_array($language, $languages) ) {
-            $lang_short_form = head( array_values( Arr::whereNotNull( data_get( $data[0], "short_form.*.{$language}" ) ) ) );
-            $lang_thumbnail = head( array_values( Arr::whereNotNull( data_get( $data[0], "thumbnail.*.{$language}" ) ) ) );
-            $lang_desc = head( array_values( Arr::whereNotNull( data_get( $data[0], "description.*.{$language}" ) ) ) );
-            $lang_logo = head( array_values( Arr::whereNotNull( data_get( $data[0], "logo.*.{$language}" ) ) ) );
+        $accepted_fields = [
+            "short_form.{$language}",
+            "thumbnail.{$language}",
+            "description.{$language}",
+            "logo.{$language}",
+        ];
+        $data = Lang::select($accepted_fields)->where('Languages', $language)->first();
+        if ($data) {
+            $lang_short_form = head(array_filter($data->short_form))[$language];
+            $lang_thumbnail = head(array_filter($data->thumbnail))[$language];
+            $lang_desc = head(array_filter($data->description))[$language];
+            $lang_logo = head(array_filter($data->logo))[$language];
             return response()->json([
                 'status' => true,
                 'language' => $language,
@@ -75,22 +79,21 @@ class LangController extends Controller
         ];
         $snip_short_form = $data[0]->short_form;
 
-        for ($i=0; $i < count($snip_short_form); $i++) {
-            foreach ($snip_short_form[$i] as $key => $value) {
-                if ($input['short_form'] == $value) {
-                    return response()->json([
-                        'message' => 'Short form already exists, Please choose a new short form.'
-                    ]);
-                }
-            }
-        }
-
-        if ( in_array($input['language_name'], $lang_data) ) {
+        if (in_array($input['language_name'], $lang_data)) {
             return response()->json([
                 'status' => false,
                 'message' => 'Language already exists.'
             ]);
         } else {
+            for ($i = 0; $i < count($snip_short_form); $i++) {
+                foreach ($snip_short_form[$i] as $value) {
+                    if ($input['short_form'] == $value) {
+                        return response()->json([
+                            'message' => 'Short form already exists, Please choose a new short form.'
+                        ]);
+                    }
+                }
+            }
             try {
                 Lang::where('Languages', 'exists', true)->push('Languages', $input['language_name']);
                 Lang::where('Languages', 'exists', true)->push('short_form', $short_form);
@@ -127,58 +130,58 @@ class LangController extends Controller
         $latest_data = $latest_data[0]->latest;
 
         //Checking if entered Language already exists
-        if ( $previous_language != $input['language_name'] and in_array($input['language_name'], $languages) ) {
+        if ($previous_language != $input['language_name'] and in_array($input['language_name'], $languages)) {
             return response()->json([
                 'message' => 'Language already exists.'
             ]);
         } else {
             try {
                 //Finding index of previous language and thumbnail and updating the array with new data
-                $languages[ array_search($previous_language, $languages) ] = $input['language_name'];
-                for ($i=0; $i < count($thumbnail); $i++) {
+                $languages[array_search($previous_language, $languages)] = $input['language_name'];
+                for ($i = 0; $i < count($thumbnail); $i++) {
                     foreach ($thumbnail[$i] as $key => $value) {
                         if ($key == $previous_language) {
                             unset($thumbnail[$i][$key]);
-                            $thumbnail[$i][ $input['language_name'] ] = $input['thumbnail'];
+                            $thumbnail[$i][$input['language_name']] = $input['thumbnail'];
                         }
                     }
                 }
 
-                for ($i=0; $i < count($short_form); $i++) {
+                for ($i = 0; $i < count($short_form); $i++) {
                     foreach ($short_form[$i] as $key => $value) {
                         if ($key == $previous_language) {
                             unset($short_form[$i][$key]);
-                            $short_form[$i][ $input['language_name'] ] = $value;
+                            $short_form[$i][$input['language_name']] = $value;
                         }
                     }
                 }
 
-                for ($i=0; $i < count($logo); $i++) {
+                for ($i = 0; $i < count($logo); $i++) {
                     foreach ($logo[$i] as $key => $value) {
                         if ($key == $previous_language) {
                             unset($logo[$i][$key]);
-                            $logo[$i][ $input['language_name'] ] = $input['lang_logo'];
+                            $logo[$i][$input['language_name']] = $input['lang_logo'];
                         }
                     }
                 }
 
-                for ($i=0; $i < count($description); $i++) {
+                for ($i = 0; $i < count($description); $i++) {
                     foreach ($description[$i] as $key => $value) {
                         if ($key == $previous_language) {
                             unset($description[$i][$key]);
-                            $description[$i][ $input['language_name'] ] = $input['lang_desc'];
+                            $description[$i][$input['language_name']] = $input['lang_desc'];
                         }
                     }
                 }
 
-                for ($i=0; $i < count($code_data); $i++) {
+                for ($i = 0; $i < count($code_data); $i++) {
                     if ($code_data[$i]['snippet_language'] == $previous_language) {
                         $code_data[$i]['snippet_language'] = $input['language_name'];
                         $code_data[$i]['snippet_thumbnail'] = $input['thumbnail'];
                     }
                 }
 
-                for ($i=0; $i < count($latest_data); $i++) {
+                for ($i = 0; $i < count($latest_data); $i++) {
                     if ($latest_data[$i]['snippet_language'] == $previous_language) {
                         $latest_data[$i]['snippet_language'] = $input['language_name'];
                         $latest_data[$i]['snippet_thumbnail'] = $input['thumbnail'];

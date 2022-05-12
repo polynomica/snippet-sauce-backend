@@ -2,45 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
 use App\Models\Code;
 use App\Models\Lang;
 use App\Models\News;
 use App\Models\Allot;
-use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 
 class DisplayController extends Controller
 {
-    public function extract_info($snippet_id)
-    {
-        //Extracting language short form and id from input
-        $lang_code = substr($snippet_id, 0, 3);
-        $id = (int)substr($snippet_id, 3);
-        $code_language = '';
-        $return_data = [];
-        
-        //Finding Language from its short form
-        $data = Lang::all();
-        $lang = $data[0]->short_form;
-        for ($i=0; $i < count($lang); $i++) {
-            foreach ($lang[$i] as $key => $value) {
-                if ($value == $lang_code) {
-                    $code_language = $key;
-                }
-            }
-        }
-        $return_data[0] = $id;
-        $return_data[1] = $code_language;
-        return $return_data;
-    }
-
     public function total_snippets()
     {
-        $data = Allot::all();
+        $data = Allot::select('allotted')->where('allotted.0', 'exists', true)->get();
         $total = 0;
-        for ($i=0; $i < count($data); $i++) {
-            $total = $total + count( $data[$i]['allotted'] );
+        foreach ($data as $value) {
+            $total = $total + count($value['allotted']);
         }
         return response()->json([
             'status' => true,
@@ -50,9 +25,19 @@ class DisplayController extends Controller
 
     public function display()
     {
-        $data = News::all();
-        $data = $data[0]->latest;
-        
+        $accepted_fields = [
+            'latest.snippet_id',
+            'latest.snippet_language',
+            'latest.snippet_title',
+            'latest.snippet_thumbnail',
+            'latest.snippet_timestamp',
+            'latest.snippet_author',
+            'latest.author_pic',
+            'latest.author_bio',
+        ];
+        $data = News::select($accepted_fields)->first();
+        $data = $data->latest;
+
         if (count($data) == 0) {
             return response()->json([
                 'status' => false,
@@ -61,18 +46,6 @@ class DisplayController extends Controller
         }
 
         $data = array_reverse($data);   //Arrange data by newest first
-        $removed_fields = [
-            'snippet_number',
-            'snippet_code',
-            'snippet_description',
-            'snippet_tag',
-            'snippet_seo',
-            'snippet_demo_url',
-            'snippet_blog'
-        ];
-        foreach ($data as $key => $value) {
-            Arr::forget($data[$key], $removed_fields);
-        }
         return response()->json([
             'status' => true,
             'snippet_data' => $data
@@ -81,37 +54,41 @@ class DisplayController extends Controller
 
     public function search($snippet_id)
     {
-        $data = $this->extract_info($snippet_id);
-        $id = $data[0];
-        $code_language = $data[1];
-        $search_response = Code::where('Language', $code_language)->get();
+        $accepted_fields = [
+            'Snippets.snippet_id',
+            'Snippets.snippet_language',
+            'Snippets.snippet_title',
+            'Snippets.snippet_code',
+            'Snippets.snippet_description',
+            'Snippets.snippet_tag',
+            'Snippets.snippet_seo',
+            'Snippets.snippet_timestamp',
+            'Snippets.snippet_demo_url',
+            'Snippets.snippet_blog',
+            'Snippets.snippet_author',
+            'Snippets.author_pic',
+            'Snippets.author_bio',
+        ];
 
-        //Finding the snippet from language based on its id, as every snippet will always be unique break the loop once we find it to reduce time complexity
-        if (count($search_response) == 0) {
+        // Using $elemMatch in Raw queries
+        $search_response = Code::select($accepted_fields)->whereRaw([
+            'Snippets' => [
+                '$elemMatch' => [
+                    'snippet_id' => $snippet_id
+                ]
+            ]
+        ])->first();
+
+        if (empty($search_response)) {
             return response()->json([
                 'status' => false,
                 'message' => 'No snippet found, check your sauce!'
             ]);
         } else {
-            $search_response = $search_response[0]->Snippets;
-            $snippet_index = array_search($id, data_get($search_response, "*.snippet_number"));
-            try {
-                $response_data = $search_response[$snippet_index];
-                $removed_fields = [
-                    'snippet_number',
-                    'snippet_thumbnail'
-                ];
-                Arr::forget($response_data, $removed_fields);
-                return response()->json([
-                    'status' => true,
-                    'snippet_data' => $response_data
-                ]);
-            } catch (Exception $error) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'No snippet found, check your sauce!'
-                ]);
-            }
+            return response()->json([
+                'status' => true,
+                'snippet_data' => $search_response->Snippets[0]
+            ]);
         }
     }
 
@@ -122,79 +99,80 @@ class DisplayController extends Controller
 
         //Two possible conditions based on given inputs
         if (empty($lang) or $lang == '') {
-            $data = News::all();
-            $data = $data[0]->latest;
-            $data = array_reverse($data);
 
-            $removed_fields = [
-                'snippet_number',
-                'snippet_code',
-                'snippet_description',
-                'snippet_tag',
-                'snippet_seo',
-                'snippet_demo_url',
-                'snippet_blog'
+            $accepted_fields = [
+                'latest.snippet_id',
+                'latest.snippet_language',
+                'latest.snippet_title',
+                'latest.snippet_thumbnail',
+                'latest.snippet_timestamp',
+                'latest.snippet_author',
+                'latest.author_pic',
+                'latest.author_bio',
             ];
-            foreach ($data as $key => $value) {
-                Arr::forget($data[$key], $removed_fields);
-            }
+            $data = News::select($accepted_fields)->first();
+            $data = $data->latest;
+            $data = array_reverse($data);
 
             return response()->json([
                 'status' => true,
                 'snippet_data' => $data
             ]);
         } else {
-            $lang_data = Code::where('Language', $lang)->get();
-            $language_data = Lang::all();
-            $lang_logo = head( array_values( Arr::whereNotNull( data_get( $language_data[0], "logo.*.{$lang}" ) ) ) );
-            $lang_desc = head( array_values( Arr::whereNotNull( data_get( $language_data[0], "description.*.{$lang}" ) ) ) );
+            $language_data = Lang::select("logo.{$lang}", "description.{$lang}")->first();
+            $lang_logo = head(array_filter($language_data->logo));
+            $lang_desc = head(array_filter($language_data->description));
+            $lang_logo = $lang_logo[$lang];
+            $lang_desc = $lang_desc[$lang];
             $filtered_language_data = [
                 'name' => $lang,
                 'logo' => $lang_logo,
                 'desc' => $lang_desc,
             ];
 
-            if (count($lang_data) == 0) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Currently it seems that there no snippets for '.$lang.', Be the first to add one!',
-                    'lang_data' => $filtered_language_data
-                ]);
-            }
-
-            $data = $lang_data[0]->Snippets;
-
-            if (count($data) == 0) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Currently it seems that there no snippets for '.$lang.', Be the first to add one!',
-                    'lang_data' => $filtered_language_data
-                ]);
-            }
-
-            $removed_fields = [
-                'snippet_number',
-                'snippet_code',
-                'snippet_description',
-                'snippet_tag',
-                'snippet_demo_url',
-                'snippet_blog'
+            $accepted_fields = [
+                'Snippets.snippet_id',
+                'Snippets.snippet_language',
+                'Snippets.snippet_title',
+                'Snippets.snippet_seo',
+                'Snippets.snippet_thumbnail',
+                'Snippets.snippet_timestamp',
+                'Snippets.snippet_author',
+                'Snippets.author_pic',
+                'Snippets.author_bio',
             ];
-            foreach ($data as $key => $value) {
-                Arr::forget($data[$key], $removed_fields);
-            }
+            $lang_data = Code::select($accepted_fields)->where('Language', $lang)->first();
 
-            return response()->json([
-                'status' => true,
-                'snippet_data' => $data,
-                'lang_data' => $filtered_language_data
-            ]);
+            if (empty($lang_data)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Currently it seems that there no snippets for ' . $lang . ', Be the first to add one!',
+                    'lang_data' => $filtered_language_data
+                ]);
+            } else {
+                $data = $lang_data->Snippets;
+                if (empty($data)) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Currently it seems that there no snippets for ' . $lang . ', Be the first to add one!',
+                        'lang_data' => $filtered_language_data
+                    ]);
+                } else {
+                    $data = $lang_data->Snippets;
+                    return response()->json([
+                        'status' => true,
+                        'snippet_data' => $data,
+                        'lang_data' => $filtered_language_data
+                    ]);
+                }
+            }
         }
     }
 
     public function title_search($title)
     {
-        $data = Code::all();
+        return true;
+        // $data = Code::all();
         // $snippet_data = [];
         // echo $data;
         // $data = data_get($data, "*.Snippets.*.snippet_title");
