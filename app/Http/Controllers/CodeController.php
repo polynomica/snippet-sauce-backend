@@ -14,13 +14,13 @@ class CodeController extends Controller
 {
     public function extract_info($snippet_id)
     {
-        //Extracting language short form and id from input
+        // Extracting language short form and id from input
         $lang_code = substr($snippet_id, 0, 3);
         $id = (int)substr($snippet_id, 3);
         $code_language = '';
         $return_data = [];
 
-        //Finding Language from its short form
+        // Finding Language from its short form
         $data = Lang::all();
         $lang = $data[0]->short_form;
         for ($i = 0; $i < count($lang); $i++) {
@@ -41,10 +41,10 @@ class CodeController extends Controller
         $temp = $temp[0]->latest;
         $data = $array;
 
-        //Adding in recently added data array
+        // Adding in recently added data array
         if (count($temp) > 30) {
             array_shift($temp);
-            array_push($temp, $data[0]);    //data = [ {} ], so to avoid adding nested object array we take only the object from the array
+            array_push($temp, $data[0]);    // data = [ {} ], so to avoid adding nested object array we take only the object from the array
             try {
                 News::where('latest', 'exists', true)->update([
                     'latest' => $temp
@@ -77,7 +77,7 @@ class CodeController extends Controller
 
     public function delete_latest($snippet_id)
     {
-        //Find and delete the snippet, if it exists in the recently added array
+        // Find and delete the snippet, if it exists in the recently added array
         $latest = News::all();
         $latest = $latest[0]->latest;
         for ($i = 0; $i < count($latest); $i++) {
@@ -105,7 +105,7 @@ class CodeController extends Controller
 
     public function create_snippet(Request $request)
     {
-        //Preparing input data
+        // Preparing input data
         $input = $request->all();
         $languages = Lang::all();
         $short_form = $languages[0]->short_form;
@@ -115,7 +115,7 @@ class CodeController extends Controller
         $timestamp = $timestamp->toISOString();
         $valid = range(0, 999999);
 
-        //Checking if language exists or not
+        // Checking if language exists or not
         if (in_array($input['snippet_language'], $languages)) {
             $snippet_thumbnail = '';
             $string = '';
@@ -139,7 +139,7 @@ class CodeController extends Controller
             $occupied = $occupied[0]->allotted;
             $free_id = array_values(array_diff($valid, $occupied));
 
-            //Checking if all IDs are allotted or not
+            // Checking if all IDs are allotted or not
             if ($free_id == null) {
                 return response()->json([
                     'status' => false,
@@ -147,7 +147,7 @@ class CodeController extends Controller
                 ]);
             }
 
-            //Preparing the input data
+            // Preparing the input data
             $rand_value = $free_id[mt_rand(0, (count($free_id) - 1))];
             $snippet_id = $string . sprintf("%06s", $rand_value);
             $response = app('App\Http\Controllers\UserController')->author_details($input['snippet_author']);
@@ -216,11 +216,11 @@ class CodeController extends Controller
         $id = $extract_data[0];
         $code_language = $extract_data[1];
 
-        //Checking if updated language is same as previous language
+        // Checking if updated language is same as previous language
         if ($code_language != $input['snippet_language']) {
-            //If updated language is not equal to previous language then port the updated snippet to new language after deleting its instance from previous language
+            // If updated language is not equal to previous language then port the updated snippet to new language after deleting its instance from previous language
             try {
-                $data = ($this->create_snippet($request))->getData();    //getData() is used to get contents of json response
+                $data = ($this->create_snippet($request))->getData();    // getData() is used to get contents of json response
                 if ($data->status) {
                     $this->delete_snippet($snippet_id);
                     return response()->json([
@@ -240,7 +240,7 @@ class CodeController extends Controller
                 ]);
             }
         } else {
-            //Preparing updated data
+            // Preparing updated data
             $info = Code::where('Language', $input['snippet_language'])->get();
             $info = $info[0]->Snippets;
             $timestamp = Carbon::now();
@@ -332,7 +332,6 @@ class CodeController extends Controller
         $code_language = $data[1];
         $search_response = Code::where('Language', $code_language)->get();
 
-        //Checking if
         if (count($search_response) == 0) {
             return response()->json([
                 'message' => 'No snippet found, check your sauce!'
@@ -342,7 +341,7 @@ class CodeController extends Controller
             $snippet_index = '';
             $search_response = $search_response[0]->Snippets;
 
-            //Finding the snippet from language based on its id, as every snippet will always be unique break the loop once we find it to reduce time complexity
+            // Finding the snippet from language based on its id, as every snippet will always be unique break the loop once we find it to reduce time complexity
             for ($i = 0; $i < count($search_response); $i++) {
                 foreach ($search_response[$i] as $key => $value) {
                     if ($key == 'snippet_number') {
@@ -372,7 +371,7 @@ class CodeController extends Controller
             }
         }
 
-        //Free up the unique Id of the deleted snippet
+        // Free up the unique Id of the deleted snippet
         try {
             $status = ($this->delete_latest($snippet_id))->getData();
             if ($status->status == false) {
