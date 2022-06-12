@@ -45,7 +45,7 @@ class DisplayController extends Controller
             ]);
         }
 
-        $data = array_reverse($data);   //Arrange data by newest first
+        $data = array_reverse($data);   // Arrange data by newest first
         return response()->json([
             'status' => true,
             'snippet_data' => $data
@@ -97,7 +97,7 @@ class DisplayController extends Controller
         $input = $request->all();
         $lang = $input['language'];
 
-        //Two possible conditions based on given inputs
+        // Two possible conditions based on given inputs
         if (empty($lang) or $lang == '') {
 
             $accepted_fields = [

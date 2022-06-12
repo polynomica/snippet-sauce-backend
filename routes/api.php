@@ -18,9 +18,9 @@ use App\Http\Controllers\DisplayController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
 
 // Admin related APIs
 Route::post('/admin_login', [UserController::class, 'admin_login']);

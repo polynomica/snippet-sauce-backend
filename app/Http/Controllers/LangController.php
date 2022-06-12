@@ -53,7 +53,7 @@ class LangController extends Controller
 
     public function add_language(Request $request)
     {
-        //Formatting input data
+        // Formatting input data
         $input = $request->all();
         $data = Lang::all();
         $lang_data = $data[0]->Languages;
@@ -129,14 +129,14 @@ class LangController extends Controller
         $code_data = $code_data[0]->Snippets;
         $latest_data = $latest_data[0]->latest;
 
-        //Checking if entered Language already exists
+        // Checking if entered Language already exists
         if ($previous_language != $input['language_name'] and in_array($input['language_name'], $languages)) {
             return response()->json([
                 'message' => 'Language already exists.'
             ]);
         } else {
             try {
-                //Finding index of previous language and thumbnail and updating the array with new data
+                // Finding index of previous language and thumbnail and updating the array with new data
                 $languages[array_search($previous_language, $languages)] = $input['language_name'];
                 for ($i = 0; $i < count($thumbnail); $i++) {
                     foreach ($thumbnail[$i] as $key => $value) {
@@ -188,7 +188,7 @@ class LangController extends Controller
                     }
                 }
 
-                //Peforming changes in DB
+                // Peforming changes in DB
                 Lang::where('Languages', 'exists', true)->update([
                     'Languages' => $languages,
                     'short_form' => $short_form,

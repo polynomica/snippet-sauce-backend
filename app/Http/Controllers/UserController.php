@@ -12,7 +12,7 @@ class UserController extends Controller
 {
     public function author_details($git_username)
     {
-        //Fetch author details using github REST API
+        // Fetch author details using github REST API
         $url_string = 'https://api.github.com/users/' . $git_username;
         $response = Http::get($url_string);
         $response = json_decode($response, true);
@@ -51,11 +51,11 @@ class UserController extends Controller
         $git_username = $input['git_username'];
         $password = $input['password'];
 
-        //Authenciate user credentials
-        $data = array(
+        // Authenciate user credentials
+        $data = [
             'username' => $git_username,
             'password' => $password
-        );
+        ];
         if (Auth::attempt($data)) {
             $url_string = 'https://api.github.com/users/' . $git_username;
             $response = Http::get($url_string);
