@@ -9,7 +9,6 @@ use App\Models\Lang;
 use App\Models\News;
 use App\Models\Allot;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class CodeController extends Controller
 {
