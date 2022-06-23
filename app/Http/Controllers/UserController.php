@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
-use App\Models\Users;
+use Throwable;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -37,7 +37,7 @@ class UserController extends Controller
                 'author_avatar' => $author_info[2],
                 'author_url' => $author_info[3]
             ]);
-        } catch (Exception $error) {
+        } catch (Throwable $error) {
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong, Please try again!'
@@ -65,7 +65,7 @@ class UserController extends Controller
                 $response['avatar_url'],
                 $response['html_url']
             ];
-            $admin_token = Users::select('_id')->where('username', $git_username)->get();
+            $admin_token = User::select('_id')->where('username', $git_username)->get();
             $admin_token = $admin_token[0]->_id;
             return response()->json([
                 'status' => true,

@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
+use Throwable;
 use Carbon\Carbon;
 use App\Models\Code;
 use App\Models\Lang;
 use App\Models\News;
 use App\Models\Allot;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CodeController extends Controller
 {
@@ -21,13 +22,17 @@ class CodeController extends Controller
         $return_data = [];
 
         // Finding Language from its short form
-        $data = Lang::all();
-        $lang = $data[0]->short_form;
+        $data = Lang::select('short_form')->first();
+        $lang = $data->short_form;
+        dd(Lang::all()->toArray());
+        foreach ($lang as $key => $value) {
+            if ($value == $lang_code) {
+                $code_language = $key;
+                dd($key, $value);
+            }
+        }
         for ($i = 0; $i < count($lang); $i++) {
             foreach ($lang[$i] as $key => $value) {
-                if ($value == $lang_code) {
-                    $code_language = $key;
-                }
             }
         }
         $return_data[0] = $id;
@@ -53,7 +58,7 @@ class CodeController extends Controller
                     'status' => true,
                     'message' => 'Snippet added successfully.'
                 ]);
-            } catch (Exception $error) {
+            } catch (Throwable $error) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Something went wrong, Please try again!'
@@ -66,7 +71,7 @@ class CodeController extends Controller
                     'status' => true,
                     'message' => 'Snippet added successfully.'
                 ]);
-            } catch (Exception $error) {
+            } catch (Throwable $error) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Something went wrong, Please try again!'
@@ -92,7 +97,7 @@ class CodeController extends Controller
                         'status' => true,
                         'message' => 'Snippet removed successfully.'
                     ]);
-                } catch (Exception $error) {
+                } catch (Throwable $error) {
                     return response()->json([
                         'status' => false,
                         'message' => 'Something went wrong, Please try again!'
@@ -107,105 +112,108 @@ class CodeController extends Controller
     {
         // Preparing input data
         $input = $request->all();
-        $languages = Lang::all();
-        $short_form = $languages[0]->short_form;
-        $thumbnail = $languages[0]->thumbnail;
-        $languages = $languages[0]->Languages;
-        $timestamp = Carbon::now();
-        $timestamp = $timestamp->toISOString();
-        $valid = range(0, 999999);
+        $languages = Lang::select('short_form', 'thumbnail', 'Languages')->first();
+        $short_form = $languages->short_form;
+        $thumbnail = $languages->thumbnail;
+        $languages = $languages->Languages;
 
         // Checking if language exists or not
         if (in_array($input['snippet_language'], $languages)) {
             $snippet_thumbnail = '';
             $string = '';
 
-            for ($i = 0; $i < count($thumbnail); $i++) {
-                foreach ($thumbnail[$i] as $key => $value) {
-                    if ($key == $input['snippet_language']) {
-                        $snippet_thumbnail = $value;
-                    }
+            foreach ($thumbnail as $key => $value) {
+                if (array_key_first($value) == $input['snippet_language']) {
+                    $snippet_thumbnail = $value[$input['snippet_language']];
                 }
             }
 
-            for ($i = 0; $i < count($short_form); $i++) {
-                foreach ($short_form[$i] as $key => $value) {
-                    if ($key == $input['snippet_language']) {
-                        $string = $value;
-                    }
+            foreach ($short_form as $key => $value) {
+                if (array_key_first($value) == $input['snippet_language']) {
+                    $string = $value[$input['snippet_language']];
                 }
             }
-            $occupied = Allot::where('Language', $input['snippet_language'])->get();
-            $occupied = $occupied[0]->allotted;
+
+            $occupied = Allot::select('allotted')->where('Language', $input['snippet_language'])->first();
+            $occupied = $occupied->allotted;
+            $valid = range(0, 999999);
             $free_id = array_values(array_diff($valid, $occupied));
 
             // Checking if all IDs are allotted or not
             if ($free_id == null) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'IDs have run out.'
-                ]);
+                return response()->json(
+                    [
+                        'status' => false,
+                        'message' => 'IDs have run out.'
+                    ]
+                );
             }
 
             // Preparing the input data
             $rand_value = $free_id[mt_rand(0, (count($free_id) - 1))];
             $snippet_id = $string . sprintf("%06s", $rand_value);
-            $response = app('App\Http\Controllers\UserController')->author_details($input['snippet_author']);
+            $response = app(UserController::class)->author_details($input['snippet_author']);
             $response = $response->getData();
             if (!($response->status)) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Check github username.'
-                ]);
+                return response()->json(
+                    [
+                        'status' => false,
+                        'message' => 'Check github username.'
+                    ]
+                );
             }
             $author_pic = $response->author_avatar;
             $author_bio = $response->author_bio;
             $data = [
-                [
-                    'snippet_id' => $snippet_id,
-                    'snippet_number' => $rand_value,
-                    'snippet_language' => $input['snippet_language'],
-                    'snippet_title' => $input['snippet_title'],
-                    'snippet_code' => $input['snippet_code'],
-                    'snippet_description' => $input['snippet_description'],
-                    'snippet_tag' => $input['snippet_tag'],
-                    'snippet_seo' => $input['snippet_seo'],
-                    'snippet_thumbnail' => $snippet_thumbnail,
-                    'snippet_timestamp' => $timestamp,
-                    'snippet_demo_url' => $input['snippet_demo_url'],
-                    'snippet_blog' => $input['snippet_blog'],
-                    'snippet_author' => $input['snippet_author'],
-                    'author_pic' => $author_pic,
-                    'author_bio' => $author_bio,
-                ]
+                'snippet_id' => $snippet_id,
+                'snippet_language' => $input['snippet_language'],
+                'snippet_title' => $input['snippet_title'],
+                'snippet_code' => $input['snippet_code'],
+                'snippet_description' => $input['snippet_description'],
+                'snippet_tag' => $input['snippet_tag'],
+                'snippet_seo' => $input['snippet_seo'],
+                'snippet_thumbnail' => $snippet_thumbnail,
+                'snippet_demo_url' => $input['snippet_demo_url'],
+                'snippet_blog' => $input['snippet_blog'],
+                'snippet_author' => $input['snippet_author'],
+                'author_pic' => $author_pic,
+                'author_bio' => $author_bio,
             ];
 
             try {
-                Code::where('Language', $input['snippet_language'])->push('Snippets', $data);
+                Code::create($data);
                 Allot::where('Language', $input['snippet_language'])->push('allotted', $rand_value);
                 $status = ($this->update_latest($data))->getData();
                 if ($status->status) {
-                    return response()->json([
-                        'status' => true,
-                        'message' => 'Snippet added successfully.'
-                    ]);
+                    return response()->json(
+                        [
+                            'status' => true,
+                            'message' => 'Snippet added successfully.'
+                        ]
+                    );
                 } else {
-                    return response()->json([
+                    return response()->json(
+                        [
+                            'status' => false,
+                            'message' => 'Something went wrong, Please try again!'
+                        ]
+                    );
+                }
+            } catch (Throwable $error) {
+                return response()->json(
+                    [
                         'status' => false,
                         'message' => 'Something went wrong, Please try again!'
-                    ]);
-                }
-            } catch (Exception $error) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Something went wrong, Please try again!'
-                ]);
+                    ]
+                );
             }
         } else {
-            return response()->json([
-                'status' => false,
-                'message' => 'Language does not exists.'
-            ]);
+            return response()->json(
+                [
+                    'status' => false,
+                    'message' => 'Language does not exists.'
+                ]
+            );
         }
     }
 
@@ -223,21 +231,27 @@ class CodeController extends Controller
                 $data = ($this->create_snippet($request))->getData();    // getData() is used to get contents of json response
                 if ($data->status) {
                     $this->delete_snippet($snippet_id);
-                    return response()->json([
-                        'status' => true,
-                        'message' => 'Snippet updated successfully.'
-                    ]);
+                    return response()->json(
+                        [
+                            'status' => true,
+                            'message' => 'Snippet updated successfully.'
+                        ]
+                    );
                 } else {
-                    return response()->json([
+                    return response()->json(
+                        [
+                            'status' => false,
+                            'message' => 'Something went wrong, Please try again!'
+                        ]
+                    );
+                }
+            } catch (Throwable $error) {
+                return response()->json(
+                    [
                         'status' => false,
                         'message' => 'Something went wrong, Please try again!'
-                    ]);
-                }
-            } catch (Exception $error) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Something went wrong, Please try again!'
-                ]);
+                    ]
+                );
             }
         } else {
             // Preparing updated data
@@ -245,21 +259,25 @@ class CodeController extends Controller
             $info = $info[0]->Snippets;
             $timestamp = Carbon::now();
             $timestamp = $timestamp->toISOString();
-            $response = app('App\Http\Controllers\UserController')->author_details($input['snippet_author']);
+            $response = app(UserController::class)->author_details($input['snippet_author']);
             $response = $response->getData();
             if (!($response->status)) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Check github username.'
-                ]);
+                return response()->json(
+                    [
+                        'status' => false,
+                        'message' => 'Check github username.'
+                    ]
+                );
             }
-            $thumb_response = app('App\Http\Controllers\LangController')->language_details($input['snippet_language']);
+            $thumb_response = app(LangController::class)->language_details($input['snippet_language']);
             $thumb_response = $thumb_response->getData();
             if (!($thumb_response->status)) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Check github username.'
-                ]);
+                return response()->json(
+                    [
+                        'status' => false,
+                        'message' => 'Check github username.'
+                    ]
+                );
             }
             $author_pic = $response->author_avatar;
             $author_bio = $response->author_bio;
@@ -301,95 +319,72 @@ class CodeController extends Controller
             }
 
             try {
-                Code::where('Language', $input['snippet_language'])->update([
-                    'Snippets' => $info
-                ]);
+                Code::where('Language', $input['snippet_language'])->update(
+                    [
+                        'Snippets' => $info
+                    ]
+                );
                 $status_1 = ($this->delete_latest($snippet_id))->getData();
                 $status_2 = ($this->update_latest($updated_data))->getData();
                 if ($status_1->status == false or $status_2->status == false) {
-                    return response()->json([
+                    return response()->json(
+                        [
+                            'status' => false,
+                            'message' => 'Something went wrong, Please try again!'
+                        ]
+                    );
+                }
+                return response()->json(
+                    [
+                        'status' => true,
+                        'message' => 'Snippet updated successfully.'
+                    ]
+                );
+            } catch (Throwable $error) {
+                return response()->json(
+                    [
                         'status' => false,
                         'message' => 'Something went wrong, Please try again!'
-                    ]);
-                }
-                return response()->json([
-                    'status' => true,
-                    'message' => 'Snippet updated successfully.'
-                ]);
-            } catch (Exception $error) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Something went wrong, Please try again!'
-                ]);
+                    ]
+                );
             }
         }
     }
 
     public function delete_snippet($snippet_id)
     {
-        $data = $this->extract_info($snippet_id);
-        $id = $data[0];
-        $code_language = $data[1];
-        $search_response = Code::where('Language', $code_language)->get();
-
-        if (count($search_response) == 0) {
-            return response()->json([
-                'message' => 'No snippet found, check your sauce!'
-            ]);
-        } else {
-            $temp = 0;
-            $snippet_index = '';
-            $search_response = $search_response[0]->Snippets;
-
-            // Finding the snippet from language based on its id, as every snippet will always be unique break the loop once we find it to reduce time complexity
-            for ($i = 0; $i < count($search_response); $i++) {
-                foreach ($search_response[$i] as $key => $value) {
-                    if ($key == 'snippet_number') {
-                        if ($value == $id) {
-                            $snippet_index = $i;
-                            $temp = 1;
-                            break;
-                        }
-                    }
-                }
-                if ($temp == 1) {
-                    break;
-                }
-            }
-            unset($search_response[$snippet_index]);
-            $search_response = array_values($search_response);
-
-            try {
-                Code::where('Language', $code_language)->update([
-                    'Snippets' => $search_response
-                ]);
-            } catch (Exception $error) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Something went wrong, Please try again!'
-                ]);
-            }
-        }
-
-        // Free up the unique Id of the deleted snippet
+        $this->extract_info($snippet_id = 'ccs854822');
+        dd(123);
         try {
+            $data = $this->extract_info($snippet_id);
+            $id = $data[0];
+            $code_language = $data[1];
             $status = ($this->delete_latest($snippet_id))->getData();
             if ($status->status == false) {
-                return response()->json([
+                return response()->json(
+                    [
+                        'status' => false,
+                        'message' => 'Something went wrong, Please try again!'
+                    ]
+                );
+            }
+
+            // Free up the unique Id of the deleted snippet
+            Allot::where('Language', $code_language)->pull('allotted', $id);
+            Code::where('snippet_id', $snippet_id)->delete();
+            return response()->json(
+                [
+                    'status' => true,
+                    'message' => 'Snippet deleted successfully.'
+                ]
+            );
+        } catch (Throwable $error) {
+            return response()->json(
+                [
                     'status' => false,
                     'message' => 'Something went wrong, Please try again!'
-                ]);
-            }
-            Allot::where('Language', $code_language)->pull('allotted', $id);
-            return response()->json([
-                'status' => true,
-                'message' => 'Snippet deleted successfully.'
-            ]);
-        } catch (Exception $error) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Something went wrong, Please try again!'
-            ]);
+                ]
+            );
         }
     }
 }
