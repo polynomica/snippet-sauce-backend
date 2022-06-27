@@ -150,40 +150,32 @@ class DisplayController extends Controller
         }
     }
 
+    /**
+     * Title Search
+     *
+     * @param  mixed $title
+     * @return void
+     */
     public function title_search($title)
     {
-        return true;
-        // $data = Code::all();
-        // $snippet_data = [];
-        // echo $data;
-        // $data = data_get($data, "*.Snippets.*.snippet_title");
-        // $data = $data[0];
-        // $count = Str::contains($data, ['A']);
-        // dd($count, $data);
+        $accepted_fields = [
+            'snippet_id',
+            'snippet_language',
+            'snippet_title',
+            'snippet_seo',
+            'snippet_thumbnail',
+            'snippet_timestamp',
+            'snippet_author',
+            'author_pic',
+            'author_bio',
+        ];
+        $snippet_data = Code::select($accepted_fields)->where('snippet_title', 'like', "%{$title}%")->limit(10)->get();
 
-        // for ($i=0; $i < count($data); $i++) {
-        //     $snips = $data[$i]->Snippets;
-        //     for ($j=0; $j < count($snips); $j++) {
-        //         if ($snips[$j]['snippet_title'] == $title) {
-        //             array_push($snippet_data, $snips[$j]);
-        //             break;
-        //         }
-        //     }
-        // }
-        // if (count($snippet_data) == 0) {
-        //     return response()->json(
-        //         [
-        //             'status' => false,
-        //             'message' => 'Currently it seems that there no snippets for ' . $title . ', Be the first to add one!'
-        //         ]
-        //     );
-        // }
-
-        // return response()->json(
-        //     [
-        //         'status' => true,
-        //         'snippet_data' => $snippet_data
-        //     ]
-        // );
+        return response()->json(
+            [
+                'status' => true,
+                'snippet_data' => $snippet_data
+            ]
+        );
     }
 }

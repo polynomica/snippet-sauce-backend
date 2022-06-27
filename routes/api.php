@@ -30,6 +30,7 @@ Route::get('/author_details/{git_username}', [UserController::class, 'author_det
 Route::post('/filter', [DisplayController::class, 'filter']);
 Route::get('/display', [DisplayController::class, 'display']);
 Route::get('/total', [DisplayController::class, 'total_snippets']);
+Route::get('/title/{title}', [DisplayController::class, 'title_search']);
 Route::get('/search/{snippet_id}', [DisplayController::class, 'search']);
 
 // Language CRUD Operations
