@@ -10,6 +10,12 @@ use Illuminate\Support\Facades\Http;
 
 class UserController extends Controller
 {
+    /**
+     * Get Author Details
+     *
+     * @param  mixed $git_username
+     * @return void
+     */
     public function author_details($git_username)
     {
         // Fetch author details using github REST API
@@ -45,6 +51,12 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * Admin Login
+     *
+     * @param  mixed $request
+     * @return void
+     */
     public function admin_login(Request $request)
     {
         $input = $request->all();
