@@ -139,8 +139,6 @@ class CodeController extends Controller
         }
         $author_pic = $response->author_avatar;
         $author_bio = $response->author_bio;
-        $thumbnail = Lang::select('thumbnail')->where('language_name', $input['snippet_language'])->first();
-        $snippet_thumbnail = $thumbnail->thumbnail;
 
         $updated_data = [
             'snippet_title' => $input['snippet_title'],
@@ -148,7 +146,6 @@ class CodeController extends Controller
             'snippet_description' => $input['snippet_description'],
             'snippet_tag' => $input['snippet_tag'],
             'snippet_seo' => $input['snippet_seo'],
-            'snippet_thumbnail' => $snippet_thumbnail,
             'snippet_demo_url' => $input['snippet_demo_url'],
             'snippet_blog' => $input['snippet_blog'],
             'snippet_author' => $input['snippet_author'],
