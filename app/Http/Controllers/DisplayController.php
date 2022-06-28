@@ -36,7 +36,6 @@ class DisplayController extends Controller
             'snippet_language',
             'snippet_title',
             'snippet_thumbnail',
-            'snippet_timestamp',
             'snippet_author',
             'author_pic',
             'author_bio',
@@ -74,7 +73,6 @@ class DisplayController extends Controller
             'snippet_description',
             'snippet_tag',
             'snippet_seo',
-            'snippet_timestamp',
             'snippet_demo_url',
             'snippet_blog',
             'snippet_author',
@@ -123,7 +121,6 @@ class DisplayController extends Controller
                 'snippet_title',
                 'snippet_seo',
                 'snippet_thumbnail',
-                'snippet_timestamp',
                 'snippet_author',
                 'author_pic',
                 'author_bio',
@@ -151,6 +148,28 @@ class DisplayController extends Controller
     }
 
     /**
+     * Get Similar Snippets for a Language
+     *
+     * @param  mixed $language
+     * @return void
+     */
+    public function similar_snippets($language)
+    {
+        $data = Code::select('snippet_id', 'snippet_title')
+            ->where('snippet_language', $language)
+            ->orderBy('updated_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        return response()->json(
+            [
+                'status' => true,
+                'snippet_data' => $data ?? [],
+            ]
+        );
+    }
+
+    /**
      * Title Search
      *
      * @param  mixed $title
@@ -162,19 +181,21 @@ class DisplayController extends Controller
             'snippet_id',
             'snippet_language',
             'snippet_title',
-            'snippet_seo',
             'snippet_thumbnail',
-            'snippet_timestamp',
             'snippet_author',
             'author_pic',
             'author_bio',
         ];
-        $snippet_data = Code::select($accepted_fields)->where('snippet_title', 'like', "%{$title}%")->limit(10)->get();
+
+        $snippet_data = Code::select($accepted_fields)
+            ->where('snippet_title', 'like', "%{$title}%")
+            ->limit(10)
+            ->get();
 
         return response()->json(
             [
                 'status' => true,
-                'snippet_data' => $snippet_data
+                'snippet_data' => $snippet_data ?? []
             ]
         );
     }

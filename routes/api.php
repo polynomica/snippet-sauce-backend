@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\Http\Request;
+// use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CodeController;
 use App\Http\Controllers\UserController;
@@ -32,6 +32,7 @@ Route::get('/display', [DisplayController::class, 'display']);
 Route::get('/total', [DisplayController::class, 'total_snippets']);
 Route::get('/title/{title}', [DisplayController::class, 'title_search']);
 Route::get('/search/{snippet_id}', [DisplayController::class, 'search']);
+Route::get('/similar/{language}', [DisplayController::class, 'similar_snippets']);
 
 // Language CRUD Operations
 Route::get('/languages', [LangController::class, 'get_languages']);
