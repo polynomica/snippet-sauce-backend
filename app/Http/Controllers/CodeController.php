@@ -97,7 +97,7 @@ class CodeController extends Controller
 
             try {
                 Code::create($data);
-                Lang::where('language', $input['snippet_language'])->push('allotted', $rand_value);
+                Lang::where('language_name', $input['snippet_language'])->push('allotted', $rand_value);
                 return response()->json(
                     [
                         'status' => true,
@@ -185,7 +185,7 @@ class CodeController extends Controller
             $code_language = $data[1];
 
             // Free up the unique Id of the deleted snippet
-            Lang::where('language', $code_language)->pull('allotted', $id);
+            Lang::where('language_name', $code_language)->pull('allotted', $id);
             Code::where('snippet_id', $snippet_id)->delete();
             return response()->json(
                 [
