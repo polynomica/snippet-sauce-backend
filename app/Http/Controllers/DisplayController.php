@@ -74,6 +74,7 @@ class DisplayController extends Controller
             'snippet_title',
             'snippet_code',
             'snippet_description',
+            'snippet_thumbnail',
             'snippet_tag',
             'snippet_seo',
             'snippet_demo_url',
