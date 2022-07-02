@@ -40,7 +40,10 @@ class DisplayController extends Controller
             'author_pic',
             'author_bio',
         ];
-        $data = Code::select($accepted_fields)->orderBy('updated_at', 'desc')->limit(30)->get();
+        $data = Code::select($accepted_fields)
+            ->orderBy('created_at', 'desc')
+            ->limit(30)
+            ->get();
         if (count($data) == 0) {
             return response()->json(
                 [
@@ -125,7 +128,10 @@ class DisplayController extends Controller
                 'author_pic',
                 'author_bio',
             ];
-            $data = Code::select($accepted_fields)->where('snippet_language', $input['language'])->get();
+            $data = Code::select($accepted_fields)
+                ->where('snippet_language', $input['language'])
+                ->orderBy('created_at', 'desc')
+                ->get();
 
             if (!isset($data)) {
                 return response()->json(
@@ -157,7 +163,7 @@ class DisplayController extends Controller
     {
         $data = Code::select('snippet_id', 'snippet_title')
             ->where('snippet_language', $language)
-            ->orderBy('updated_at', 'desc')
+            ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
 
@@ -189,6 +195,7 @@ class DisplayController extends Controller
 
         $snippet_data = Code::select($accepted_fields)
             ->where('snippet_title', 'like', "%{$title}%")
+            ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
 

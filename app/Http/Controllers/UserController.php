@@ -23,10 +23,12 @@ class UserController extends Controller
         $response = Http::get($url_string);
         $response = json_decode($response, true);
         if (array_key_exists('message', $response)) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Check github username.'
-            ]);
+            return response()->json(
+                [
+                    'status' => false,
+                    'message' => 'Check github username.'
+                ]
+            );
         }
         $author_info = [
             $response['login'],
@@ -36,18 +38,22 @@ class UserController extends Controller
         ];
 
         try {
-            return response()->json([
-                'status' => true,
-                'author_username' => $author_info[0],
-                'author_bio' => $author_info[1],
-                'author_avatar' => $author_info[2],
-                'author_url' => $author_info[3]
-            ]);
+            return response()->json(
+                [
+                    'status' => true,
+                    'author_username' => $author_info[0],
+                    'author_bio' => $author_info[1],
+                    'author_avatar' => $author_info[2],
+                    'author_url' => $author_info[3]
+                ]
+            );
         } catch (Throwable $error) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Something went wrong, Please try again!'
-            ]);
+            return response()->json(
+                [
+                    'status' => false,
+                    'message' => 'Something went wrong, Please try again!'
+                ]
+            );
         }
     }
 
@@ -77,23 +83,27 @@ class UserController extends Controller
                 $response['avatar_url'],
                 $response['html_url']
             ];
-            $admin_token = User::select('_id')->where('username', $git_username)->get();
-            $admin_token = $admin_token[0]->_id;
-            return response()->json([
-                'status' => true,
-                'admin_username' => $admin_info[0],
-                'admin_bio' => $admin_info[1],
-                'admin_avatar' => $admin_info[2],
-                'admin_url' => $admin_info[3],
-                'logged_in' => true,
-                'role' => 'admin',
-                'admin_token' => $admin_token
-            ]);
+            $admin_token = User::select('_id')->where('username', $git_username)->first();
+            $admin_token = $admin_token->_id;
+            return response()->json(
+                [
+                    'status' => true,
+                    'admin_username' => $admin_info[0],
+                    'admin_bio' => $admin_info[1],
+                    'admin_avatar' => $admin_info[2],
+                    'admin_url' => $admin_info[3],
+                    'logged_in' => true,
+                    'role' => 'admin',
+                    'admin_token' => $admin_token
+                ]
+            );
         } else {
-            return response()->json([
-                'status' => false,
-                'message' => 'Wrong Credentials, Please try again!'
-            ]);
+            return response()->json(
+                [
+                    'status' => false,
+                    'message' => 'Wrong Credentials, Please try again!'
+                ]
+            );
         }
     }
 }

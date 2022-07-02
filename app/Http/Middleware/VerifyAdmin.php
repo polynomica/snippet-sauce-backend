@@ -19,21 +19,24 @@ class VerifyAdmin
     {
         if ($request->hasHeader('X-Admin-Token')) {
             $value = $request->header('X-Admin-Token');
-            $admin_token = User::select('_id')->get();
-            $admin_token = data_get($admin_token, '*._id');
-            if (in_array($value, $admin_token)) {
+            $admin_token = User::find($value);
+            if (isset($admin_token)) {
                 return $next($request);
             } else {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'You do not have the appropriate role to access this, Please try again!'
-                ]);
+                return response()->json(
+                    [
+                        'status' => false,
+                        'message' => 'You do not have the appropriate role to access this, Please try again!'
+                    ]
+                );
             }
         } else {
-            return response()->json([
-                'status' => false,
-                'message' => 'You do not have the appropriate role to access this, Please try again!'
-            ]);
+            return response()->json(
+                [
+                    'status' => false,
+                    'message' => 'You do not have the appropriate role to access this, Please try again!'
+                ]
+            );
         }
     }
 }
