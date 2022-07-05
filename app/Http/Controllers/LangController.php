@@ -147,7 +147,8 @@ class LangController extends Controller
                 Lang::where('language_name', $previous_language)->update($update_data);
                 Code::where('snippet_language', $previous_language)->update(
                     [
-                        'snippet_language' => $input['language_name']
+                        'snippet_language' => $input['language_name'],
+                        'snippet_thumbnail' => $input['thumbnail']
                     ]
                 );
                 return response()->json(
