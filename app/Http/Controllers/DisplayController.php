@@ -44,7 +44,7 @@ class DisplayController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit(30)
             ->get();
-        if (!isset($data)) {
+        if (count($data) == 0) {
             return response()->json(
                 [
                     'status' => false,
@@ -124,7 +124,7 @@ class DisplayController extends Controller
                 "logo" => $filtered_language_data->logo
             ];
 
-            if (!isset($filtered_language_data->snippets)) {
+            if (count($filtered_language_data->snippets) == 0) {
                 return response()->json(
                     [
                         'status' => false,

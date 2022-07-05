@@ -55,7 +55,7 @@ class CodeController extends Controller
             $free_id = array_values(array_diff($valid, $occupied));
 
             // Checking if all IDs are allotted or not
-            if (!isset($free_id)) {
+            if (count($free_id) == 0) {
                 return response()->json(
                     [
                         'status' => false,

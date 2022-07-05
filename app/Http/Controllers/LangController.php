@@ -17,10 +17,7 @@ class LangController extends Controller
      */
     public function get_languages()
     {
-        $languages = Lang::select('language_name')
-            ->pluck('language_name')
-            ->toArray();
-        $languages = array_values(array_filter($languages));
+        $languages = Lang::select('language_name')->pluck('language_name');
         return response()->json(
             [
                 'status' => true,
