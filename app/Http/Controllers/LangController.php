@@ -2,219 +2,165 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
-use App\Models\News;
+use Throwable;
 use App\Models\Code;
 use App\Models\Lang;
-use App\Models\Allot;
 use Illuminate\Http\Request;
 
 class LangController extends Controller
 {
+    /**
+     * Get All Languages
+     *
+     * @author Hetarth Shah
+     * @return void
+     */
     public function get_languages()
     {
-        $languages = Lang::select('Languages')->first();
-        $languages = $languages->Languages;
-        return response()->json([
-            'status' => true,
-            'languages' => $languages
-        ]);
+        $languages = Lang::select('language_name')->pluck('language_name');
+        return response()->json(
+            [
+                'status' => true,
+                'languages' => $languages
+            ]
+        );
     }
 
+    /**
+     * Get Language Details
+     *
+     * @param  mixed $language
+     * @return void
+     */
     public function language_details($language)
     {
         $accepted_fields = [
-            "short_form.{$language}",
-            "thumbnail.{$language}",
-            "description.{$language}",
-            "logo.{$language}",
+            "short_form",
+            "thumbnail",
+            "description",
+            "logo",
         ];
-        $data = Lang::select($accepted_fields)->where('Languages', $language)->first();
-        if ($data) {
-            $lang_short_form = head(array_filter($data->short_form))[$language];
-            $lang_thumbnail = head(array_filter($data->thumbnail))[$language];
-            $lang_desc = head(array_filter($data->description))[$language];
-            $lang_logo = head(array_filter($data->logo))[$language];
-            return response()->json([
-                'status' => true,
-                'language' => $language,
-                'short_form' => $lang_short_form,
-                'thumbnail' => $lang_thumbnail,
-                'logo' => $lang_logo,
-                'description' => $lang_desc
-            ]);
+        $data = Lang::select($accepted_fields)->where('language_name', $language)->first();
+        if (isset($data)) {
+            return response()->json(
+                [
+                    'status' => true,
+                    'language' => $language,
+                    'short_form' => $data->short_form,
+                    'thumbnail' => $data->thumbnail,
+                    'description' => $data->description,
+                    'logo' => $data->logo,
+                ]
+            );
         } else {
-            return response()->json([
-                'status' => false,
-                'message' => "No such language exists."
-            ]);
+            return response()->json(
+                [
+                    'status' => false,
+                    'message' => "No such language exists."
+                ]
+            );
         }
     }
 
+    /**
+     * Add Language
+     *
+     * @param  mixed $request
+     * @return void
+     */
     public function add_language(Request $request)
     {
-        //Formatting input data
         $input = $request->all();
-        $data = Lang::all();
-        $lang_data = $data[0]->Languages;
-        $create_data = [
-            'Language' => $input['language_name'],
-            'Snippets' => [],
-        ];
-        $allotted_id = [
-            'Language' => $input['language_name'],
-            'allotted' => [],
-        ];
-        $short_form = [
-            $input['language_name'] => $input['short_form'],
-        ];
-        $thumbnail = [
-            $input['language_name'] => $input['thumbnail'],
-        ];
-        $lang_logo = [
-            $input['language_name'] => $input['lang_logo'],
-        ];
-        $lang_desc = [
-            $input['language_name'] => $input['lang_desc'],
-        ];
-        $snip_short_form = $data[0]->short_form;
 
-        if (in_array($input['language_name'], $lang_data)) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Language already exists.'
-            ]);
-        } else {
-            for ($i = 0; $i < count($snip_short_form); $i++) {
-                foreach ($snip_short_form[$i] as $value) {
-                    if ($input['short_form'] == $value) {
-                        return response()->json([
-                            'message' => 'Short form already exists, Please choose a new short form.'
-                        ]);
-                    }
-                }
-            }
-            try {
-                Lang::where('Languages', 'exists', true)->push('Languages', $input['language_name']);
-                Lang::where('Languages', 'exists', true)->push('short_form', $short_form);
-                Lang::where('Languages', 'exists', true)->push('thumbnail', $thumbnail);
-                Lang::where('Languages', 'exists', true)->push('logo', $lang_logo);
-                Lang::where('Languages', 'exists', true)->push('description', $lang_desc);
-                Code::create($create_data);
-                Allot::create($allotted_id);
-                return response()->json([
-                    'status' => true,
-                    'message' => 'Language added successfully.'
-                ]);
-            } catch (Exception $error) {
-                return response()->json([
+        $exists = Lang::where('language_name', $input['language_name'])
+            ->orWhere('short_form', $input['short_form'])
+            ->first();
+        if (isset($exists)) {
+            return response()->json(
+                [
                     'status' => false,
-                    'message' => 'Something went wrong, Please try again!'
-                ]);
+                    'message' => 'Language Name or Short form already exists.'
+                ]
+            );
+        } else {
+            try {
+                $data = [
+                    'language_name' => $input['language_name'],
+                    'short_form' => $input['short_form'],
+                    'thumbnail' => $input['thumbnail'],
+                    'description' => $input['lang_desc'],
+                    'logo' => $input['lang_logo'],
+                    'allotted' => [],
+                ];
+
+                Lang::create($data);
+                return response()->json(
+                    [
+                        'status' => true,
+                        'message' => 'Language added successfully.'
+                    ]
+                );
+            } catch (Throwable $error) {
+                return response()->json(
+                    [
+                        'status' => false,
+                        'message' => 'Something went wrong, Please try again!'
+                    ]
+                );
             }
         }
     }
 
+    /**
+     * Update Language
+     *
+     * @param  mixed $request
+     * @param  mixed $previous_language
+     * @return void
+     */
     public function update_language(Request $request, $previous_language)
     {
         $input = $request->all();
-        $data = Lang::all();
-        $code_data = Code::where('Language', $previous_language)->get();
-        $latest_data = News::all();
-        $languages = $data[0]->Languages;
-        $thumbnail = $data[0]->thumbnail;
-        $short_form = $data[0]->short_form;
-        $logo = $data[0]->logo;
-        $description = $data[0]->description;
-        $code_data = $code_data[0]->Snippets;
-        $latest_data = $latest_data[0]->latest;
+        $exists = Lang::where('language_name', $input['language_name'])->first();
 
-        //Checking if entered Language already exists
-        if ($previous_language != $input['language_name'] and in_array($input['language_name'], $languages)) {
-            return response()->json([
-                'message' => 'Language already exists.'
-            ]);
+        // Checking if entered Language already exists
+        if ($previous_language != $input['language_name'] and isset($exists)) {
+            return response()->json(
+                [
+                    'status' => false,
+                    'message' => 'Language already exists.'
+                ]
+            );
         } else {
             try {
-                //Finding index of previous language and thumbnail and updating the array with new data
-                $languages[array_search($previous_language, $languages)] = $input['language_name'];
-                for ($i = 0; $i < count($thumbnail); $i++) {
-                    foreach ($thumbnail[$i] as $key => $value) {
-                        if ($key == $previous_language) {
-                            unset($thumbnail[$i][$key]);
-                            $thumbnail[$i][$input['language_name']] = $input['thumbnail'];
-                        }
-                    }
-                }
+                $update_data = [
+                    "language_name" => $input['language_name'],
+                    "thumbnail" => $input['thumbnail'],
+                    "description" => $input['lang_desc'],
+                    "logo" => $input['lang_logo'],
+                ];
 
-                for ($i = 0; $i < count($short_form); $i++) {
-                    foreach ($short_form[$i] as $key => $value) {
-                        if ($key == $previous_language) {
-                            unset($short_form[$i][$key]);
-                            $short_form[$i][$input['language_name']] = $value;
-                        }
-                    }
-                }
-
-                for ($i = 0; $i < count($logo); $i++) {
-                    foreach ($logo[$i] as $key => $value) {
-                        if ($key == $previous_language) {
-                            unset($logo[$i][$key]);
-                            $logo[$i][$input['language_name']] = $input['lang_logo'];
-                        }
-                    }
-                }
-
-                for ($i = 0; $i < count($description); $i++) {
-                    foreach ($description[$i] as $key => $value) {
-                        if ($key == $previous_language) {
-                            unset($description[$i][$key]);
-                            $description[$i][$input['language_name']] = $input['lang_desc'];
-                        }
-                    }
-                }
-
-                for ($i = 0; $i < count($code_data); $i++) {
-                    if ($code_data[$i]['snippet_language'] == $previous_language) {
-                        $code_data[$i]['snippet_language'] = $input['language_name'];
-                        $code_data[$i]['snippet_thumbnail'] = $input['thumbnail'];
-                    }
-                }
-
-                for ($i = 0; $i < count($latest_data); $i++) {
-                    if ($latest_data[$i]['snippet_language'] == $previous_language) {
-                        $latest_data[$i]['snippet_language'] = $input['language_name'];
-                        $latest_data[$i]['snippet_thumbnail'] = $input['thumbnail'];
-                    }
-                }
-
-                //Peforming changes in DB
-                Lang::where('Languages', 'exists', true)->update([
-                    'Languages' => $languages,
-                    'short_form' => $short_form,
-                    'thumbnail' => $thumbnail,
-                    'logo' => $logo,
-                    'description' => $description
-                ]);
-                Allot::where('Language', $previous_language)->update([
-                    'Language' => $input['language_name']
-                ]);
-                News::where('latest', 'exists', true)->update([
-                    'latest' => $latest_data
-                ]);
-                Code::where('Language', $previous_language)->update([
-                    'Language' => $input['language_name'],
-                    'Snippets' => $code_data
-                ]);
-                return response()->json([
-                    'status' => true,
-                    'message' => 'Data updated successfully.'
-                ]);
-            } catch (Exception $error) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Something went wrong, Please try again!'
-                ]);
+                // Peforming changes in DB
+                Lang::where('language_name', $previous_language)->update($update_data);
+                Code::where('snippet_language', $previous_language)->update(
+                    [
+                        'snippet_language' => $input['language_name'],
+                        'snippet_thumbnail' => $input['thumbnail']
+                    ]
+                );
+                return response()->json(
+                    [
+                        'status' => true,
+                        'message' => 'Data updated successfully.'
+                    ]
+                );
+            } catch (Throwable $error) {
+                return response()->json(
+                    [
+                        'status' => false,
+                        'message' => 'Something went wrong, Please try again!'
+                    ]
+                );
             }
         }
     }
