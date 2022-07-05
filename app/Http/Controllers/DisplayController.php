@@ -44,7 +44,7 @@ class DisplayController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit(30)
             ->get();
-        if (count($data) == 0) {
+        if (!isset($data)) {
             return response()->json(
                 [
                     'status' => false,
@@ -85,7 +85,7 @@ class DisplayController extends Controller
         ];
 
         $data = Code::select($accepted_fields)->where('snippet_id', $snippet_id)->first();
-        if (empty($data)) {
+        if (!isset($data)) {
             return response()->json(
                 [
                     'status' => false,
@@ -117,37 +117,27 @@ class DisplayController extends Controller
             $data = $this->display();
             return $data;
         } else {
-            $filtered_language_data = Lang::select('language_name', 'description', 'logo')->where('language_name', $input['language'])->first();
-
-            $accepted_fields = [
-                'snippet_id',
-                'snippet_language',
-                'snippet_title',
-                'snippet_seo',
-                'snippet_thumbnail',
-                'snippet_author',
-                'author_pic',
-                'author_bio',
+            $filtered_language_data = Lang::with('snippets')->select('language_name', 'description', 'logo')->where('language_name', $input['language'])->first();
+            $lang_data = [
+                "language_name" => $filtered_language_data->language_name,
+                "description" => $filtered_language_data->description,
+                "logo" => $filtered_language_data->logo
             ];
-            $data = Code::select($accepted_fields)
-                ->where('snippet_language', $input['language'])
-                ->orderBy('created_at', 'desc')
-                ->get();
 
-            if (!isset($data)) {
+            if (!isset($filtered_language_data->snippets)) {
                 return response()->json(
                     [
                         'status' => false,
                         'message' => "Currently it seems that there no snippets for {$input['language']}, Be the first to add one!",
-                        'lang_data' => $filtered_language_data
+                        'lang_data' => $lang_data
                     ]
                 );
             } else {
                 return response()->json(
                     [
                         'status' => true,
-                        'snippet_data' => $data,
-                        'lang_data' => $filtered_language_data
+                        'snippet_data' => $filtered_language_data->snippets,
+                        'lang_data' => $lang_data
                     ]
                 );
             }
