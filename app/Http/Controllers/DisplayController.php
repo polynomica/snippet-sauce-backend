@@ -111,36 +111,39 @@ class DisplayController extends Controller
     public function filter(Request $request)
     {
         $input = $request->all();
+        $filtered_language_data = Lang::with('snippets')->select('language_name', 'description', 'logo')->where('language_name', $input['language'])->first();
 
-        // Two possible conditions based on given inputs
-        if (!isset($input['language'])) {
-            $data = $this->display();
-            return $data;
+        if (!isset($filtered_language_data)) {
+            return response()->json(
+                [
+                    'status' => false,
+                    'message' => "Currently it seems that {$input['language']} language doesn't exists for us. Snap it into existance by raising an issue at our service repo."
+                ]
+            );
+        }
+
+        $lang_data = [
+            "language_name" => $filtered_language_data->language_name,
+            "description" => $filtered_language_data->description,
+            "logo" => $filtered_language_data->logo
+        ];
+
+        if (count($filtered_language_data->snippets) == 0) {
+            return response()->json(
+                [
+                    'status' => true,
+                    'message' => "Currently it seems that there no snippets for {$input['language']}, Be the first to add one!",
+                    'lang_data' => $lang_data
+                ]
+            );
         } else {
-            $filtered_language_data = Lang::with('snippets')->select('language_name', 'description', 'logo')->where('language_name', $input['language'])->first();
-            $lang_data = [
-                "language_name" => $filtered_language_data->language_name,
-                "description" => $filtered_language_data->description,
-                "logo" => $filtered_language_data->logo
-            ];
-
-            if (count($filtered_language_data->snippets) == 0) {
-                return response()->json(
-                    [
-                        'status' => false,
-                        'message' => "Currently it seems that there no snippets for {$input['language']}, Be the first to add one!",
-                        'lang_data' => $lang_data
-                    ]
-                );
-            } else {
-                return response()->json(
-                    [
-                        'status' => true,
-                        'snippet_data' => $filtered_language_data->snippets,
-                        'lang_data' => $lang_data
-                    ]
-                );
-            }
+            return response()->json(
+                [
+                    'status' => true,
+                    'snippet_data' => $filtered_language_data->snippets,
+                    'lang_data' => $lang_data
+                ]
+            );
         }
     }
 
