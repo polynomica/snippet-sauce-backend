@@ -117,7 +117,7 @@ class DisplayController extends Controller
             return response()->json(
                 [
                     'status' => false,
-                    'message' => "Currently it seems that {$input['language']} language doesn't exists for us. Snap it into existance by raising an issue at our service repo."
+                    'message' => "Currently it seems that {$input['language']} language doesn't exists for us. Snap it into existence by raising an issue at our service repo."
                 ]
             );
         }
