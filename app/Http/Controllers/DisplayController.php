@@ -16,10 +16,11 @@ class DisplayController extends Controller
     public function total_snippets()
     {
         $count = Code::count();
+
         return response()->json(
             [
                 'status' => true,
-                'total_snippets' => $count
+                'total_snippets' => $count,
             ]
         );
     }
@@ -48,14 +49,15 @@ class DisplayController extends Controller
             return response()->json(
                 [
                     'status' => false,
-                    'message' => 'Currently it seems that there no snippets, new snippets will be added soon!'
+                    'message' => 'Currently it seems that there no snippets, new snippets will be added soon!',
                 ]
             );
         }
+
         return response()->json(
             [
                 'status' => true,
-                'snippet_data' => $data
+                'snippet_data' => $data,
             ]
         );
     }
@@ -63,7 +65,7 @@ class DisplayController extends Controller
     /**
      * Search Snippets by snippet_id
      *
-     * @param  mixed $snippet_id
+     * @param  mixed  $snippet_id
      * @return void
      */
     public function search($snippet_id)
@@ -85,18 +87,18 @@ class DisplayController extends Controller
         ];
 
         $data = Code::select($accepted_fields)->where('snippet_id', $snippet_id)->first();
-        if (!isset($data)) {
+        if (! isset($data)) {
             return response()->json(
                 [
                     'status' => false,
-                    'message' => 'No snippet found, check your sauce!'
+                    'message' => 'No snippet found, check your sauce!',
                 ]
             );
         } else {
             return response()->json(
                 [
                     'status' => true,
-                    'snippet_data' => $data
+                    'snippet_data' => $data,
                 ]
             );
         }
@@ -105,49 +107,52 @@ class DisplayController extends Controller
     /**
      * Filter Snippets by Language
      *
-     * @param  mixed $request
+     * @param  mixed  $request
      * @return void
      */
     public function filter(Request $request)
     {
         $input = $request->all();
+        $filtered_language_data = Lang::with('snippets')->select('language_name', 'description', 'logo')->where('language_name', $input['language'])->first();
 
-        // Two possible conditions based on given inputs
-        if (!isset($input['language'])) {
-            $data = $this->display();
-            return $data;
+        if (! isset($filtered_language_data)) {
+            return response()->json(
+                [
+                    'status' => false,
+                    'message' => "Currently it seems that {$input['language']} language doesn't exists for us. Snap it into existence by raising an issue at our service repo.",
+                ]
+            );
+        }
+
+        $lang_data = [
+            'language_name' => $filtered_language_data->language_name,
+            'description' => $filtered_language_data->description,
+            'logo' => $filtered_language_data->logo,
+        ];
+
+        if (count($filtered_language_data->snippets) == 0) {
+            return response()->json(
+                [
+                    'status' => true,
+                    'message' => "Currently it seems that there no snippets for {$input['language']}, Be the first to add one!",
+                    'lang_data' => $lang_data,
+                ]
+            );
         } else {
-            $filtered_language_data = Lang::with('snippets')->select('language_name', 'description', 'logo')->where('language_name', $input['language'])->first();
-            $lang_data = [
-                "language_name" => $filtered_language_data->language_name,
-                "description" => $filtered_language_data->description,
-                "logo" => $filtered_language_data->logo
-            ];
-
-            if (count($filtered_language_data->snippets) == 0) {
-                return response()->json(
-                    [
-                        'status' => false,
-                        'message' => "Currently it seems that there no snippets for {$input['language']}, Be the first to add one!",
-                        'lang_data' => $lang_data
-                    ]
-                );
-            } else {
-                return response()->json(
-                    [
-                        'status' => true,
-                        'snippet_data' => $filtered_language_data->snippets,
-                        'lang_data' => $lang_data
-                    ]
-                );
-            }
+            return response()->json(
+                [
+                    'status' => true,
+                    'snippet_data' => $filtered_language_data->snippets,
+                    'lang_data' => $lang_data,
+                ]
+            );
         }
     }
 
     /**
      * Get Similar Snippets for a Language
      *
-     * @param  mixed $language
+     * @param  mixed  $language
      * @return void
      */
     public function similar_snippets($language)
@@ -169,7 +174,7 @@ class DisplayController extends Controller
     /**
      * Title Search
      *
-     * @param  mixed $title
+     * @param  mixed  $title
      * @return void
      */
     public function title_search($title)
@@ -193,7 +198,7 @@ class DisplayController extends Controller
         return response()->json(
             [
                 'status' => true,
-                'snippet_data' => $snippet_data ?? []
+                'snippet_data' => $snippet_data ?? [],
             ]
         );
     }

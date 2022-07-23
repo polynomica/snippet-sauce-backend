@@ -2,34 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use Throwable;
 use App\Models\Code;
 use App\Models\Lang;
 use Illuminate\Http\Request;
+use Throwable;
 
 class CodeController extends Controller
 {
     /**
      * Extract Info from snippet_id
      *
-     * @param  mixed $snippet_id
+     * @param  mixed  $snippet_id
      * @return void
      */
     public function extract_info($snippet_id)
     {
         // Extracting language short form and id from input
         $lang_code = substr($snippet_id, 0, 3);
-        $id = (int)substr($snippet_id, 3);
+        $id = (int) substr($snippet_id, 3);
 
         // Finding Language from its short form
         $data = Lang::select('language_name')->where('short_form', $lang_code)->first();
+
         return [$id, $data->language_name];
     }
 
     /**
      * Create Snippet
      *
-     * @param  mixed $request
+     * @param  mixed  $request
      * @return void
      */
     public function create_snippet(Request $request)
@@ -38,11 +39,11 @@ class CodeController extends Controller
         $lang_data = Lang::where('language_name', $input['snippet_language'])->first();
 
         // Checking if language exists or not
-        if (!isset($lang_data)) {
+        if (! isset($lang_data)) {
             return response()->json(
                 [
                     'status' => false,
-                    'message' => 'Language does not exists.'
+                    'message' => 'Language does not exists.',
                 ]
             );
         } else {
@@ -59,21 +60,21 @@ class CodeController extends Controller
                 return response()->json(
                     [
                         'status' => false,
-                        'message' => 'IDs have run out.'
+                        'message' => 'IDs have run out.',
                     ]
                 );
             }
 
             // Preparing the input data
             $rand_value = $free_id[mt_rand(0, (count($free_id) - 1))];
-            $snippet_id = $short_form . sprintf("%06s", $rand_value);
+            $snippet_id = $short_form.sprintf('%06s', $rand_value);
             $response = app(UserController::class)->author_details($input['snippet_author']);
             $response = $response->getData();
-            if (!($response->status)) {
+            if (! ($response->status)) {
                 return response()->json(
                     [
                         'status' => false,
-                        'message' => 'Check github username.'
+                        'message' => 'Check github username.',
                     ]
                 );
             }
@@ -98,17 +99,18 @@ class CodeController extends Controller
             try {
                 Code::create($data);
                 Lang::where('language_name', $input['snippet_language'])->push('allotted', $rand_value);
+
                 return response()->json(
                     [
                         'status' => true,
-                        'message' => 'Snippet added successfully.'
+                        'message' => 'Snippet added successfully.',
                     ]
                 );
             } catch (Throwable $error) {
                 return response()->json(
                     [
                         'status' => false,
-                        'message' => 'Something went wrong, Please try again!'
+                        'message' => 'Something went wrong, Please try again!',
                     ]
                 );
             }
@@ -118,8 +120,8 @@ class CodeController extends Controller
     /**
      * Update Snippet
      *
-     * @param  mixed $request
-     * @param  mixed $snippet_id
+     * @param  mixed  $request
+     * @param  mixed  $snippet_id
      * @return void
      */
     public function update_snippet(Request $request, $snippet_id)
@@ -129,11 +131,11 @@ class CodeController extends Controller
         // Preparing updated data
         $response = app(UserController::class)->author_details($input['snippet_author']);
         $response = $response->getData();
-        if (!($response->status)) {
+        if (! ($response->status)) {
             return response()->json(
                 [
                     'status' => false,
-                    'message' => 'Check github username.'
+                    'message' => 'Check github username.',
                 ]
             );
         }
@@ -150,22 +152,23 @@ class CodeController extends Controller
             'snippet_blog' => $input['snippet_blog'],
             'snippet_author' => $input['snippet_author'],
             'author_pic' => $author_pic,
-            'author_bio' => $author_bio
+            'author_bio' => $author_bio,
         ];
 
         try {
             Code::where('snippet_id', $snippet_id)->update($updated_data);
+
             return response()->json(
                 [
                     'status' => true,
-                    'message' => 'Snippet updated successfully.'
+                    'message' => 'Snippet updated successfully.',
                 ]
             );
         } catch (Throwable $error) {
             return response()->json(
                 [
                     'status' => false,
-                    'message' => 'Something went wrong, Please try again!'
+                    'message' => 'Something went wrong, Please try again!',
                 ]
             );
         }
@@ -174,7 +177,7 @@ class CodeController extends Controller
     /**
      * Delete Snippet
      *
-     * @param  mixed $snippet_id
+     * @param  mixed  $snippet_id
      * @return void
      */
     public function delete_snippet($snippet_id)
@@ -187,17 +190,18 @@ class CodeController extends Controller
             // Free up the unique Id of the deleted snippet
             Lang::where('language_name', $code_language)->pull('allotted', $id);
             Code::where('snippet_id', $snippet_id)->delete();
+
             return response()->json(
                 [
                     'status' => true,
-                    'message' => 'Snippet deleted successfully.'
+                    'message' => 'Snippet deleted successfully.',
                 ]
             );
         } catch (Throwable $error) {
             return response()->json(
                 [
                     'status' => false,
-                    'message' => 'Something went wrong, Please try again!'
+                    'message' => 'Something went wrong, Please try again!',
                 ]
             );
         }
