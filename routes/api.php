@@ -1,11 +1,11 @@
 <?php
 
 // use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CodeController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\LangController;
 use App\Http\Controllers\DisplayController;
+use App\Http\Controllers\LangController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------

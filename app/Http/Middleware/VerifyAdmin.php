@@ -2,8 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use Closure;
 use App\Models\User;
+use Closure;
 use Illuminate\Http\Request;
 
 class VerifyAdmin
@@ -26,7 +26,7 @@ class VerifyAdmin
                 return response()->json(
                     [
                         'status' => false,
-                        'message' => 'You do not have the appropriate role to access this, Please try again!'
+                        'message' => 'You do not have the appropriate role to access this, Please try again!',
                     ]
                 );
             }
@@ -34,7 +34,7 @@ class VerifyAdmin
             return response()->json(
                 [
                     'status' => false,
-                    'message' => 'You do not have the appropriate role to access this, Please try again!'
+                    'message' => 'You do not have the appropriate role to access this, Please try again!',
                 ]
             );
         }

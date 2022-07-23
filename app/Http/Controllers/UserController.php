@@ -2,31 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use Throwable;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Throwable;
 
 class UserController extends Controller
 {
     /**
      * Get Author Details
      *
-     * @param  mixed $git_username
+     * @param  mixed  $git_username
      * @return void
      */
     public function author_details($git_username)
     {
         // Fetch author details using github REST API
-        $url_string = 'https://api.github.com/users/' . $git_username;
+        $url_string = 'https://api.github.com/users/'.$git_username;
         $response = Http::get($url_string);
         $response = json_decode($response, true);
         if (array_key_exists('message', $response)) {
             return response()->json(
                 [
                     'status' => false,
-                    'message' => 'Check github username.'
+                    'message' => 'Check github username.',
                 ]
             );
         }
@@ -34,7 +34,7 @@ class UserController extends Controller
             $response['login'],
             $response['bio'],
             $response['avatar_url'],
-            $response['html_url']
+            $response['html_url'],
         ];
 
         try {
@@ -44,14 +44,14 @@ class UserController extends Controller
                     'author_username' => $author_info[0],
                     'author_bio' => $author_info[1],
                     'author_avatar' => $author_info[2],
-                    'author_url' => $author_info[3]
+                    'author_url' => $author_info[3],
                 ]
             );
         } catch (Throwable $error) {
             return response()->json(
                 [
                     'status' => false,
-                    'message' => 'Something went wrong, Please try again!'
+                    'message' => 'Something went wrong, Please try again!',
                 ]
             );
         }
@@ -60,7 +60,7 @@ class UserController extends Controller
     /**
      * Admin Login
      *
-     * @param  mixed $request
+     * @param  mixed  $request
      * @return void
      */
     public function admin_login(Request $request)
@@ -72,19 +72,20 @@ class UserController extends Controller
         // Authenciate user credentials
         $data = [
             'username' => $git_username,
-            'password' => $password
+            'password' => $password,
         ];
         if (Auth::attempt($data)) {
-            $url_string = 'https://api.github.com/users/' . $git_username;
+            $url_string = 'https://api.github.com/users/'.$git_username;
             $response = Http::get($url_string);
             $admin_info = [
                 $response['login'],
                 $response['bio'],
                 $response['avatar_url'],
-                $response['html_url']
+                $response['html_url'],
             ];
             $admin_token = User::select('_id')->where('username', $git_username)->first();
             $admin_token = $admin_token->_id;
+
             return response()->json(
                 [
                     'status' => true,
@@ -94,14 +95,14 @@ class UserController extends Controller
                     'admin_url' => $admin_info[3],
                     'logged_in' => true,
                     'role' => 'admin',
-                    'admin_token' => $admin_token
+                    'admin_token' => $admin_token,
                 ]
             );
         } else {
             return response()->json(
                 [
                     'status' => false,
-                    'message' => 'Wrong Credentials, Please try again!'
+                    'message' => 'Wrong Credentials, Please try again!',
                 ]
             );
         }

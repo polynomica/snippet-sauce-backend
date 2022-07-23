@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Throwable;
 use App\Models\Code;
 use App\Models\Lang;
 use Illuminate\Http\Request;
+use Throwable;
 
 class LangController extends Controller
 {
@@ -13,15 +13,17 @@ class LangController extends Controller
      * Get All Languages
      *
      * @author Hetarth Shah
+     *
      * @return void
      */
     public function get_languages()
     {
         $languages = Lang::select('language_name')->pluck('language_name');
+
         return response()->json(
             [
                 'status' => true,
-                'languages' => $languages
+                'languages' => $languages,
             ]
         );
     }
@@ -29,16 +31,16 @@ class LangController extends Controller
     /**
      * Get Language Details
      *
-     * @param  mixed $language
+     * @param  mixed  $language
      * @return void
      */
     public function language_details($language)
     {
         $accepted_fields = [
-            "short_form",
-            "thumbnail",
-            "description",
-            "logo",
+            'short_form',
+            'thumbnail',
+            'description',
+            'logo',
         ];
         $data = Lang::select($accepted_fields)->where('language_name', $language)->first();
         if (isset($data)) {
@@ -56,7 +58,7 @@ class LangController extends Controller
             return response()->json(
                 [
                     'status' => false,
-                    'message' => "No such language exists."
+                    'message' => 'No such language exists.',
                 ]
             );
         }
@@ -65,7 +67,7 @@ class LangController extends Controller
     /**
      * Add Language
      *
-     * @param  mixed $request
+     * @param  mixed  $request
      * @return void
      */
     public function add_language(Request $request)
@@ -79,7 +81,7 @@ class LangController extends Controller
             return response()->json(
                 [
                     'status' => false,
-                    'message' => 'Language Name or Short form already exists.'
+                    'message' => 'Language Name or Short form already exists.',
                 ]
             );
         } else {
@@ -94,17 +96,18 @@ class LangController extends Controller
                 ];
 
                 Lang::create($data);
+
                 return response()->json(
                     [
                         'status' => true,
-                        'message' => 'Language added successfully.'
+                        'message' => 'Language added successfully.',
                     ]
                 );
             } catch (Throwable $error) {
                 return response()->json(
                     [
                         'status' => false,
-                        'message' => 'Something went wrong, Please try again!'
+                        'message' => 'Something went wrong, Please try again!',
                     ]
                 );
             }
@@ -114,8 +117,8 @@ class LangController extends Controller
     /**
      * Update Language
      *
-     * @param  mixed $request
-     * @param  mixed $previous_language
+     * @param  mixed  $request
+     * @param  mixed  $previous_language
      * @return void
      */
     public function update_language(Request $request, $previous_language)
@@ -128,16 +131,16 @@ class LangController extends Controller
             return response()->json(
                 [
                     'status' => false,
-                    'message' => 'Language already exists.'
+                    'message' => 'Language already exists.',
                 ]
             );
         } else {
             try {
                 $update_data = [
-                    "language_name" => $input['language_name'],
-                    "thumbnail" => $input['thumbnail'],
-                    "description" => $input['lang_desc'],
-                    "logo" => $input['lang_logo'],
+                    'language_name' => $input['language_name'],
+                    'thumbnail' => $input['thumbnail'],
+                    'description' => $input['lang_desc'],
+                    'logo' => $input['lang_logo'],
                 ];
 
                 // Peforming changes in DB
@@ -145,20 +148,21 @@ class LangController extends Controller
                 Code::where('snippet_language', $previous_language)->update(
                     [
                         'snippet_language' => $input['language_name'],
-                        'snippet_thumbnail' => $input['thumbnail']
+                        'snippet_thumbnail' => $input['thumbnail'],
                     ]
                 );
+
                 return response()->json(
                     [
                         'status' => true,
-                        'message' => 'Data updated successfully.'
+                        'message' => 'Data updated successfully.',
                     ]
                 );
             } catch (Throwable $error) {
                 return response()->json(
                     [
                         'status' => false,
-                        'message' => 'Something went wrong, Please try again!'
+                        'message' => 'Something went wrong, Please try again!',
                     ]
                 );
             }
